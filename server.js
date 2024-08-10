@@ -1,27 +1,23 @@
 "use strict";
 
-const express = require("express");
-const cors = require("cors");
-const axios = require("axios").default;
-require("dotenv").config();
+import express from "express";
+import cors from "cors";
+import axios from "axios"; // Axios with default import
+import dotenv from "dotenv"; // Import dotenv to configure environment variables
+import pg from "pg"; // Import the entire module as the default export
 
-//const movieData = require("./Movie Data/data.json");
+// Configure dotenv to load environment variables from .env file
+dotenv.config();
 
 const apiKey = process.env.API_KEY;
 const pgUrl = process.env.DATABASE_URL;
 const PORT = process.env.PORT || 5000;
 
-//for quiery in js file using pg package
-const { Client } = require("pg");
+//Client configuration
+const { Client } = pg;
 const client = new Client(pgUrl);
-
 const app = express();
 
-//server open for all clients requests
-/*The "cors" package is commonly used in web development to enable Cross-Origin Resource Sharing (CORS). 
-CORS is a mechanism that allows resources (e.g., fonts, scripts, or APIs) on a web page to be requested 
-from another domain outside the domain from which the resource originated. 
-It is a security feature implemented by web browsers to protect users from potential cross-site scripting (XSS) attacks.*/
 app.use(cors());
 //for parsing body
 app.use(express.json());
@@ -35,7 +31,9 @@ client
       console.log(`Server is listening ${PORT}`);
     });
   })
-  .catch();
+  .catch((err) => {
+    console.error("Failed to start server:", err);
+  });
 
 
 // NOTE: IMPORTANT IN THE .env file: put This code 
@@ -43,3 +41,5 @@ client
 PORT=3004
 DATABASE_URL=postgresql://localhost:5432/YourDatabaseName
 */
+
+export { client };

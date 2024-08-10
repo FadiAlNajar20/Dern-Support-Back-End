@@ -1,5 +1,5 @@
 -- User Table
-CREATE TABLE User (
+CREATE TABLE "User" (
     ID serial PRIMARY KEY,
     Name varchar NOT NULL,
     Email varchar UNIQUE NOT NULL,
@@ -10,13 +10,13 @@ CREATE TABLE User (
 -- Admin Table
 CREATE TABLE Admin (
     ID serial PRIMARY KEY,
-    UserID int REFERENCES User(ID)
+    UserID int REFERENCES "User"(ID)
 );
 
 -- Technician Table
 CREATE TABLE Technician (
     ID serial PRIMARY KEY,
-    UserID int REFERENCES User(ID),
+    UserID int REFERENCES "User"(ID),
     Specialization varchar NOT NULL,
     Availability timestamp NOT NULL
 );
@@ -24,7 +24,7 @@ CREATE TABLE Technician (
 -- Customer Table
 CREATE TABLE Customer (
     ID serial PRIMARY KEY,
-    UserID int REFERENCES User(ID),
+    UserID int REFERENCES "User"(ID),
     AccountType varchar NOT NULL
 );
 
@@ -46,7 +46,8 @@ CREATE TABLE Request (
     DeviceDeliveryMethod varchar NOT NULL,
     CreatedDate timestamp NOT NULL,
     EstimatedTime int ,
-    RequestType varchar NOT NULL
+    RequestType varchar NOT NULL,
+    Urgency string NOT NULL
 );
 
 -- NewRequest Table
@@ -81,10 +82,11 @@ CREATE TABLE JobSchedule (
     TechnicianID int REFERENCES Technician(ID),
     ActualTime timestamp NOT NULL,
     ActualCost decimal(10,2) ,
-    Status varchar NOT NULL
+    Status varchar NOT NULL, 
+    Priority string
 );
 
--- Spares Table
+--Spares Table
 CREATE TABLE Spares (
     ID serial PRIMARY KEY,
     Name varchar NOT NULL,
@@ -97,8 +99,7 @@ CREATE TABLE Article (
     ID serial PRIMARY KEY,
     Title varchar NOT NULL,
     Content text NOT NULL,
-    PublishedDate timestamp NOT NULL,
-    AdminID int REFERENCES Admin(ID)
+    PublishedDate timestamp NOT NULL
 );
 
 
