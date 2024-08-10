@@ -6,6 +6,7 @@ import axios from "axios"; // Axios with default import
 import dotenv from "dotenv"; // Import dotenv to configure environment variables
 import pg from "pg"; // Import the entire module as the default export
 
+import customerRoutes from "./routes/customerRoutes.js";
 // Configure dotenv to load environment variables from .env file
 dotenv.config();
 
@@ -21,6 +22,9 @@ const app = express();
 app.use(cors());
 //for parsing body
 app.use(express.json());
+
+//ROUTES:
+app.use("/customers", customerRoutes);
 
 
 //listener
