@@ -34,7 +34,7 @@ CREATE TABLE Service (
     Description varchar NOT NULL,
     Cost decimal(10,2) NOT NULL,
     MaintenanceTime int NOT NULL,
-    IsCommon boolean NOT NULL
+    IsCommon boolean 
 );
 
 --Request Table
