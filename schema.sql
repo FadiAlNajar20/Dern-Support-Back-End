@@ -1,41 +1,41 @@
--- -- User Table
--- CREATE TABLE "User" (
---     ID serial PRIMARY KEY,
---     Name varchar NOT NULL,
---     Email varchar UNIQUE NOT NULL,
---     Password varchar NOT NULL,
---     PhoneNumber varchar NOT NULL
--- );
+-- User Table
+CREATE TABLE "User" (
+    ID serial PRIMARY KEY,
+    Name varchar NOT NULL,
+    Email varchar UNIQUE NOT NULL,
+    Password varchar NOT NULL,
+    PhoneNumber varchar NOT NULL
+);
 
--- -- Admin Table
--- CREATE TABLE Admin (
---     ID serial PRIMARY KEY,
---     UserID int REFERENCES "User"(ID)
--- );
+-- Admin Table
+CREATE TABLE Admin (
+    ID serial PRIMARY KEY,
+    UserID int REFERENCES "User"(ID)
+);
 
--- -- Technician Table
--- CREATE TABLE Technician (
---     ID serial PRIMARY KEY,
---     UserID int REFERENCES "User"(ID),
---     Specialization varchar NOT NULL,
---     Availability timestamp NOT NULL
--- );
+-- Technician Table
+CREATE TABLE Technician (
+    ID serial PRIMARY KEY,
+    UserID int REFERENCES "User"(ID),
+    Specialization varchar NOT NULL,
+    Availability timestamp NOT NULL
+);
 
--- -- Customer Table
--- CREATE TABLE Customer (
---     ID serial PRIMARY KEY,
---     UserID int REFERENCES "User"(ID),
---     AccountType varchar NOT NULL
--- );
+-- Customer Table
+CREATE TABLE Customer (
+    ID serial PRIMARY KEY,
+    UserID int REFERENCES "User"(ID),
+    AccountType varchar NOT NULL
+);
 
--- -- Service Table
--- CREATE TABLE Service (
---     ID serial PRIMARY KEY,
---     Description varchar NOT NULL,
---     Cost decimal(10,2) NOT NULL,
---     MaintenanceTime int NOT NULL,
---     IsCommon boolean NOT NULL
--- );
+-- Service Table
+CREATE TABLE Service (
+    ID serial PRIMARY KEY,
+    Description varchar NOT NULL,
+    Cost decimal(10,2) NOT NULL,
+    MaintenanceTime int NOT NULL,
+    IsCommon boolean 
+);
 
 -- Request Table
 CREATE TABLE Request (
@@ -66,14 +66,14 @@ CREATE TABLE ServiceRequest (
     RequestID int REFERENCES Request(ID)
 );
 
--- -- Feedback Table
--- CREATE TABLE Feedback (
---     ID serial PRIMARY KEY,
---     CustomerID int REFERENCES Customer(ID),
---     ServiceID int REFERENCES Service(ID),
---     Rating int NOT NULL,
---     Comment varchar
--- );
+-- Feedback Table
+CREATE TABLE Feedback (
+    ID serial PRIMARY KEY,
+    CustomerID int REFERENCES Customer(ID),
+    ServiceID int REFERENCES Service(ID),
+    Rating int NOT NULL,
+    Comment varchar
+);
 
 -- JobSchedule Table
 CREATE TABLE JobSchedule (
@@ -86,20 +86,20 @@ CREATE TABLE JobSchedule (
     Priority varchar
 );
 
--- --Spares Table
--- CREATE TABLE Spares (
---     ID serial PRIMARY KEY,
---     Name varchar NOT NULL,
---     Quantity int NOT NULL,
---     ReorderThreshold int NOT NULL
--- );
+--Spares Table
+CREATE TABLE Spares (
+    ID serial PRIMARY KEY,
+    Name varchar NOT NULL,
+    Quantity int NOT NULL,
+    ReorderThreshold int NOT NULL
+);
 
--- -- Article Table
--- CREATE TABLE Article (
---     ID serial PRIMARY KEY,
---     Title varchar NOT NULL,
---     Content text NOT NULL,
---     PublishedDate timestamp NOT NULL
--- );
+-- Article Table
+CREATE TABLE Article (
+    ID serial PRIMARY KEY,
+    Title varchar NOT NULL,
+    Content text NOT NULL,
+    PublishedDate timestamp NOT NULL
+);
 
 
