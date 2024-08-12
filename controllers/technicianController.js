@@ -65,7 +65,7 @@ export const technicianLogin = async (req, res) => {
             `UPDATE JobSchedule SET actualtime = $1, actualcost=2$, status=3$ WHERE id = $4 RETURNING *;`
             , [ActualTime, ActualCost, Status, id]
         );
-        res.json({ message: 'Job schedule updated', request: result.rows[0] });
+        res.json({ message: 'Job Updated successfully', request: result.rows[0] });
     } catch (err) {
         console.error("Update job schedule error:", err);
         res.status(500).json({ error: "Failed to update job schedule" });
