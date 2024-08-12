@@ -21,6 +21,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+//Image 
+app.use("/image", express.static("upload/images"));
 //ROUTES:
 app.use("/admin", adminRoutes);
 app.use("/customers", customerRoutes);

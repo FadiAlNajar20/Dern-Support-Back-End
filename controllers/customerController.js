@@ -156,7 +156,11 @@ export const customerSendSupportRequest = async (req, res) => {
     const requestID = requestResult.rows[0].id;
 
     // Insert into NewRequest table
-    const imgUrl = ""; // Get image link here if necessary
+    // Get image link here if necessary
+    // TEST =================TODO========================
+    const filename = req.file.filename;
+    const imgUrl = `${process.env.SERVER_URL}/image/${filename}`;
+    // TEST =================TODO========================
     await client.query(
       `
       INSERT INTO NewRequest (IssueDescription, EstimatedCost, MaintenanceTime, Image, RequestID)
