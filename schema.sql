@@ -41,7 +41,6 @@ CREATE TABLE Service (
 CREATE TABLE Request (
     ID serial PRIMARY KEY,
     CustomerID int REFERENCES Customer(ID),
-    Image varchar,
     Status varchar NOT NULL,
     DeviceDeliveryMethod varchar NOT NULL,
     CreatedDate timestamp NOT NULL,
@@ -56,6 +55,7 @@ CREATE TABLE NewRequest (
     IssueDescription varchar NOT NULL,
     EstimatedCost decimal(10,2) ,
     MaintenanceTime int ,
+    Image varchar,
     RequestID int REFERENCES Request(ID)
 );
 
