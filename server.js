@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 import pg from "pg";
 import adminRoutes from "./routes/adminRoutes.js";
 import customerRoutes from "./routes/customerRoutes.js";
-import techRoutes from "./routes/technicianRoutes.js";
+import technicianRoutes from "./routes/technicianRoutes.js";
 
 dotenv.config();
 
@@ -38,6 +38,7 @@ app.use("/image", express.static("upload/images"));
 //ROUTES:
 app.use("/admin", adminRoutes);
 app.use("/customers", customerRoutes);
+app.use("/technician",technicianRoutes);
 
 // connect Socket.io for notifications
 io.on("connection", (socket) => {

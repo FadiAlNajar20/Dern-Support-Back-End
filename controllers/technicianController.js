@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 //=============================/technicians/login=========================================
 
 // /technicians/login
+//TODO: test this 
 export const technicianLogin = async (req, res) => {
     const { Email, Password } = req.body;
   
@@ -18,9 +19,10 @@ export const technicianLogin = async (req, res) => {
       //check if the Email is exists in the database
       //We depend on the email (Maybe we can discussed a better solution)
       const result = await client.query(
-        `
-        SELECT Password FROM Technician WHERE Email = $1;
-      `,
+       `SELECT Technician.id, "User".email, "User".password
+    FROM "User"
+    JOIN Technician ON "User".id = Technician.userid
+    WHERE "User".email = $1;`,
         [Email]
       );
   
@@ -37,10 +39,13 @@ export const technicianLogin = async (req, res) => {
         return res.status(401).json({ error: "Invalid Email Or Password" });
       }
   
-      //TODO: WE should handle this
-      //generate and return JWT token
-      // const token = generateToken(id);
-      // res.status(200).json({ token });
+      const technicianId = result.rows[0].id;
+      const token = jwt.sign({ id: technicianId }, process.env.JWT_SECRET, { expiresIn: '24h' });
+      res.status(200).json({
+        message: "Login successfully",
+        success: true,
+        token,
+      });
     } catch (error) {
       console.error("Error executing query", error.stack);
       res.status(500).json({ error: "Internal server error" });
