@@ -1,5 +1,25 @@
 import { client } from "../server.js";
 import bcrypt from "bcrypt";
+import { io } from "../server.js";
+import { v4 as uuidv4 } from 'uuid';
+
+export const testIo = async (req, res) => {
+  console.log("Request received");
+
+  const body = req.body;
+  console.log(body);
+
+  // create an idintity id  for each notification
+  const notificationId = uuidv4();
+
+  io.emit("newRequest", {
+    id: notificationId, 
+    message: "Your order has been successfully scheduled. Go to the information page to see the status of your order",
+  });
+
+  res.status(200).json("done");
+};
+
 import jwt from "jsonwebtoken";
 
 // generate a token
