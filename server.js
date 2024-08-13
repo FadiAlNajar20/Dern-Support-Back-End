@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import pg from "pg"; 
 import adminRoutes from "./routes/adminRoutes.js";
 import customerRoutes from "./routes/customerRoutes.js";
+import commonRoutes from "./routes/commonRoutes.js";
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use(express.json());
 //ROUTES:
 app.use("/admin", adminRoutes);
 app.use("/customers", customerRoutes);
+app.use("/common", commonRoutes);
 
 
 //listener
