@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  testIo,
   customerSignup,
   customerLogin,
   customerLogout,
@@ -10,7 +11,7 @@ import {
 } from "../controllers/customerController.js";
 
 const router = express.Router();
-
+router.route("/testIo").post(testIo);
 router.route("/signup").post(customerSignup);
 router.route("/login").post(customerLogin);
 router.route("/logout").post(customerLogout);
