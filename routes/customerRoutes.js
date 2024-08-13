@@ -3,10 +3,12 @@ import {
   customerSignup,
   customerLogin,
   customerLogout,
-  customerSendSupportRequest,
+  customerGetEstimatedTimeAndCost,
   customerSendServiceRequest,
   customerSendFeedback,
   customerGetAllRequests,
+  customerSenApprovedSupportRequest,
+  customerGetFeedback,
 } from "../controllers/customerController.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 import { upload } from "../config/upload.js";
@@ -20,11 +22,17 @@ router.post("/logout", verifyToken, customerLogout);
 router.post(
   "/send-support-request",
   verifyToken,
-  upload.single("image"),//image upload
-  customerSendSupportRequest
+  customerGetEstimatedTimeAndCost
 );
 router.post("/send-service-request", verifyToken, customerSendServiceRequest);
 router.post("/send-feedback", verifyToken, customerSendFeedback);
 router.get("/my-requests/:id", verifyToken, customerGetAllRequests);
+router.post(
+  "/final-approval-support-request",
+  verifyToken,
+  upload.single("image"), //image upload
+  customerSenApprovedSupportRequest
+);
+router.get("/getFeedback", verifyToken, customerGetFeedback);
 
 export default router;

@@ -124,52 +124,17 @@ export const customerLogout = (req, res) => {
   res.status(200).json({ message: "Logged out successfully" });
 };
 
-//=============================/customers/send-support-request========================================
-// /customers/send-support-request
-// Tested
-export const customerSendSupportRequest = async (req, res) => {
- 
-  const CustomerID = req.userId; // from authMiddleware
-  console.log(CustomerID);
-  const { Description, DeviceDeliveryMethod } = req.body;
-
-  // All fields required
-  if (!CustomerID || !Description || !DeviceDeliveryMethod) {
-    return res.status(400).json({ error: "All fields are required" });
-  }
-
-  const estimatedCost = 100.0; // Example cost, replace with actual logic
-  const maintenanceTime = 60; // Example time in minutes, replace with actual logic
-  const estimatedTime = 60; // Example time in minutes, replace with actual logic
-
+//=============================/customers/get-estimated-time-cost========================================
+// /customers/get-estimated-time-cost TODO: GET
+// 
+export const customerGetEstimatedTimeAndCost = async (req, res) => {
   try {
-    // Insert the new request into the database
-    const requestResult = await client.query(
-      `
-      INSERT INTO Request (CustomerID, Status, DeviceDeliveryMethod, CreatedDate, EstimatedTime, RequestType, Urgency)
-      VALUES ($1, 'Pending', $2, CURRENT_TIMESTAMP, $3, 'Support Request', 'Medium')
-      RETURNING id;
-    `,
-      [CustomerID, DeviceDeliveryMethod, estimatedTime]
-    );
-
-    const requestID = requestResult.rows[0].id;
-
-    // Insert into NewRequest table
-    // Get image link here if necessary
-    // TEST =================TODO========================
-    const filename = req.file.filename;
-    const imgUrl = `${process.env.SERVER_URL}/image/${filename}`;
-    // TEST =================TODO========================
-    await client.query(
-      `
-      INSERT INTO NewRequest (IssueDescription, EstimatedCost, MaintenanceTime, Image, RequestID)
-      VALUES ($1, $2, $3, $4, $5);
-    `,
-      [Description, estimatedCost, maintenanceTime, imgUrl, requestID]
-    );
-
-    res.status(201).json({ message: "Request submitted" });
+    const estimatedTime = 10; //CALL FUNC FROM L
+    const estimatedCost = 10; //CALL FUNC FROM L
+    res.status(201).json({
+      EstimatedTime: estimatedTime,
+      EstimatedCost: estimatedCost,
+    });
   } catch (error) {
     console.error("Error executing query", error.stack);
     res.status(500).json({ error: "Internal server error" });
@@ -178,10 +143,16 @@ export const customerSendSupportRequest = async (req, res) => {
 
 //=============================/customers/send-service-request========================================
 // /customers/send-service-request
-// 
+//
 export const customerSendServiceRequest = async (req, res) => {
   const CustomerID = req.userId; //form authMiddleware
   const { ServiceID, Method } = req.body;
+
+  const technicianId = 1; //TODO: CALL assign function From L
+  //const maintenanceTime = 60; // Example time in minutes, replace with actual logic (Discuss)
+  const estimatedTime = 60; // Example time in minutes, replace with actual logic (CALL FUNC L)
+  // Create a Date object for a specific date and time
+  const actualTime = new Date("2024-08-13T12:00:00Z"); // Example time in minutes, replace with actual logic (CALL FUNC L)
 
   //all field required
   if (!CustomerID || !ServiceID || !Method) {
@@ -191,17 +162,24 @@ export const customerSendServiceRequest = async (req, res) => {
   try {
     await client.query("BEGIN"); //FROM Tabnine Ai I will test it later
 
-    const estimatedTime = 60; // TODO(L): Example time in minutes, replace with actual logic
 
     //insert the new request into the database
     //and set the status to "Pending" (or we can discuss other statuses)//(TODO)
     //and discuss Urgency Values(TODO)
     const requestResult = await client.query(
       `
-      INSERT INTO Request (CustomerID, Status, DeviceDeliveryMethod, CreatedDate, EstimatedTime, RequestType, Urgency)
-      VALUES ($1, 'Pending', $2, CURRENT_TIMESTAMP, $3, 'Service Request', 'High') RETURNING ID;
+      INSERT INTO Request (CustomerID, TechnicianID, Status, DeviceDeliveryMethod, CreatedDate, EstimatedTime, actualTime,
+      RequestType)
+      VALUES ($1, $2,'Pending', $3, CURRENT_TIMESTAMP, $4, $5, 'ServiceRequest')
+      RETURNING id;
     `,
-      [CustomerID, Method, estimatedTime]
+      [
+        CustomerID,
+        technicianId,
+        Method,
+        estimatedTime,
+        actualTime,
+      ]
     );
     //TODO: Hassan--> check if customer id exists or not (CustomerID or ID)
 
@@ -226,7 +204,7 @@ export const customerSendServiceRequest = async (req, res) => {
 
 //=============================/customers/send-feedback========================================
 // /customers/send-feedback
-// Tested
+// 
 export const customerSendFeedback = async (req, res) => {
   const CustomerID = req.userId; //form authMiddleware
 
@@ -258,7 +236,7 @@ export const customerSendFeedback = async (req, res) => {
 
 //=============================/customers/my-requests/:id========================================
 // /customers/my-requests/:id
-// Tested
+// 
 export const customerGetAllRequests = async (req, res) => {
   // const customerId = parseInt(req.params.id);
   //const customerId = req.params.id;
@@ -273,6 +251,107 @@ export const customerGetAllRequests = async (req, res) => {
     );
 
     res.status(200).json(result.rows);
+  } catch (error) {
+    console.error("Error executing query", error.stack);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+//=============================/customers/final-approval-support-request========================================
+// /customers/final-approval-support-request
+export const customerSenApprovedSupportRequest = async (req, res) => {
+  const CustomerID = req.userId; // from authMiddleware
+  console.log(CustomerID);
+  const { Description, DeviceDeliveryMethod, Title, Category } = req.body;
+  // TODO: CALL assign function From L
+
+  const technicianId = 1; //TODO: CALL assign function From L
+  const estimatedCost = 100.0; // Example cost, replace with actual logic (CALL FUNC L)
+  //const maintenanceTime = 60; // Example time in minutes, replace with actual logic (Discuss)
+  const estimatedTime = 60; // Example time in minutes, replace with actual logic (CALL FUNC L)
+  // Create a Date object for a specific date and time
+  const actualTime = new Date("2024-08-13T12:00:00Z"); // Example time in minutes, replace with actual logic (CALL FUNC L)
+
+  // All fields required
+  if (
+    !CustomerID ||
+    !Description ||
+    !DeviceDeliveryMethod ||
+    !Title ||
+    !Category
+  ) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  try {
+    // Insert the new request into the database
+    const requestResult = await client.query(
+      `
+      INSERT INTO Request (CustomerID, TechnicianID, Status, DeviceDeliveryMethod, CreatedDate, EstimatedTime, actualTime,
+      RequestType)
+      VALUES ($1, $2,'Pending', $3, CURRENT_TIMESTAMP, $4, $5, 'NewRequest')
+      RETURNING id;
+    `,
+      [
+        CustomerID,
+        technicianId,
+        DeviceDeliveryMethod,
+        estimatedTime,
+        actualTime,
+      ]
+    );
+
+    const requestID = requestResult.rows[0].id;
+
+    // Insert into NewRequest table
+    // Get image link here if necessary
+    // TEST =================TODO========================
+    // Check nullable
+    const filename = req.file.filename;
+    console.log(filename);
+    const imgUrl = `${process.env.SERVER_URL}/image/${filename}`;
+    console.log(imgUrl);
+    // TEST =================TODO========================
+    await client.query(
+      `
+      INSERT INTO NewRequest (IssueDescription, Title, Category,  EstimatedCost, Image, RequestID)
+      VALUES ($1, $2, $3, $4, $5);
+    `,
+      [Description, Title, Category, estimatedCost, imgUrl, requestID]
+    );
+
+    res.status(201).json({ message: "Request submitted" });
+  } catch (error) {
+    console.error("Error executing query", error.stack);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+//=============================/customers/getFeedback========================================
+// /customers/getFeedback
+export const customerGetFeedback = async (req, res) => {
+  //// Get one feedback based on the service ID and customer ID
+  const { serviceId } = req.params;
+  const customerId = req.userId;
+
+  //
+  if (!serviceId) {
+    return res.status(400).json({ error: "ServiceID is required" });
+  }
+
+  try {
+    const result = await client.query(
+      `
+      SELECT * FROM Feedback WHERE ServiceID = $1 AND CustomerID = $2;
+    `,
+      [serviceId, customerId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "No feedback found" });
+    }
+
+    res.status(200).json(result.rows[0]);
   } catch (error) {
     console.error("Error executing query", error.stack);
     res.status(500).json({ error: "Internal server error" });
