@@ -200,21 +200,34 @@ export const addService = async (req, res) => {
 
 //=============================/admin/technicians/createAccount========================================
 // /admin/technicians/createAccount
+//Tested
 export const createTechnicianAccount = async (req, res) => {
-    const { Name, Email, Password, PhoneNo, Specialization } = req.body;
+    const { Name, Email, Password, PhoneNumber, Specialization } = req.body;
     const hashedPassword = bcrypt.hashSync(Password, 10);
-    const sql = `INSERT INTO technicians (Name, Email, Password, PhoneNumber, Specialization) VALUES ($1, $2, $3, $4, $5) RETURNING id;`;
-    const values = [Name, Email, hashedPassword, PhoneNo, Specialization];
+    const sqlInsertUser = `INSERT INTO "User" (Name, Email, Password, PhoneNumber) VALUES ($1, $2, $3, $4) RETURNING id;`;
+    const values = [Name, Email, hashedPassword, PhoneNumber];
 
     try {
-        const result = await client.query(sql, values);
-        res.json({ message: 'Technician account created', technicianId: result.rows[0].id });
+        const result = await client.query(sqlInsertUser, values);
+
+        const userId = result.rows[0].id;
+
+        if (userId != null) {
+            const sqlInsertTechnician = `INSERT INTO technician (userid, specialization) VALUES ($1, $2) RETURNING id;`;
+            const resultAddToTechnician = await client.query(sqlInsertTechnician, [userId, Specialization]);
+
+            if (resultAddToTechnician.rowCount > 0) {
+                res.json({ message: 'Technician account created', technicianId: resultAddToTechnician.rows[0].id });
+            } else {
+                res.status(500).json({ message: 'Something went wrong with the Technician table' });
+            }
+        } else {
+            res.status(500).json({ message: 'Something went wrong with the User table' });
+        }
     } catch (err) {
         console.error("Create technician account error:", err);
         res.status(500).json({ error: "Failed to create technician account" });
     }
 };
-
-
 
 
