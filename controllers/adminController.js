@@ -3,32 +3,45 @@ import jwt from 'jsonwebtoken';
 import { client } from "../server.js";
 import bcrypt from "bcrypt";
 
+//=============================/admin/login========================================
+// /admin/login
 export const login = async (req, res) => {
     const { Email, Password } = req.body;
-
-    const sql = `SELECT * FROM admins WHERE email = $1;`;
+                 
+    const sql = `SELECT "User".id, "User".email, "User".password
+    FROM "User"
+    JOIN Admin ON "User".id = Admin.userid
+    WHERE "User".email = $1;`;
+                
     try {
         const result = await client.query(sql, [Email]);
         if (result.rows.length === 0) return res.status(404).json({ message: 'Admin not found' });
 
         const admin = result.rows[0];
-        const passwordIsValid = bcrypt.compareSync(Password, admin.password);
+        console.log(admin, "");
+        const passwordIsValid = bcrypt.compare(Password, admin.password);
         if (!passwordIsValid) return res.status(401).json({ token: null, message: 'Invalid password' });
 
         const token = jwt.sign({ id: admin.id }, process.env.JWT_SECRET, { expiresIn: '24h' });
         res.json({ token });
+
     } catch (err) {
         console.error("Login error:", err);
         res.status(500).json({ error: "Failed to login" });
     }
 };
 
+//=============================/admin/logout========================================
+// /admin/logout
 export const logout = (req, res) => {
     res.json({ message: 'Logged out successfully' });
 };
 
+//=============================/admin/support-requests/update========================================
+// /admin/support-requests/update
 export const updateSupportRequest = async (req, res) => {
-    const { id, Status } = req.body;
+    const id = req.userId;
+    const { Status } = req.body;
     const sql = `UPDATE Request SET status = $1 WHERE id = $2 RETURNING *;`;
     const values = [Status, id];
 
@@ -41,9 +54,16 @@ export const updateSupportRequest = async (req, res) => {
     }
 };
 
+//=============================/admin/support-requests/getAll========================================
+// /admin/support-requests/getAll
 export const getAllRequests = async (req, res) => {
-    const sql = `SELECT * FROM Request;`;
 
+    const id = req.userId;
+    console.log(id, " ");
+
+    const sql = `SELECT * FROM Request;`;
+    
+    
     try {
         const result = await client.query(sql);
         res.json(result.rows);
@@ -53,6 +73,8 @@ export const getAllRequests = async (req, res) => {
     }
 };
 
+//=============================/admin/feedback/getAll========================================
+// /admin/feedback/getAll
 export const getAllFeedback = async (req, res) => {
     const sql = `SELECT * FROM Feedback;`;
 
@@ -65,6 +87,8 @@ export const getAllFeedback = async (req, res) => {
     }
 };
 
+//=============================/admin/articles/add========================================
+// /admin/articles/add
 export const addArticle = async (req, res) => {
     const { Title, Image, Content, CreatedDate } = req.body;
     const sql = `INSERT INTO Article (Title, Image, Description, CreatedDate) VALUES ($1, $2, $3, $4) RETURNING id;`;
@@ -79,6 +103,8 @@ export const addArticle = async (req, res) => {
     }
 };
 
+//=============================/admin/articles/update========================================
+// /admin/articles/update
 export const updateArticle = async (req, res) => {
     const { id, Title, Image, Content } = req.body;
     const sql = `UPDATE Article SET title = $1, Image = $2 Description = $3 WHERE id = $4 RETURNING *;`;
@@ -93,6 +119,8 @@ export const updateArticle = async (req, res) => {
     }
 };
 
+//=============================/admin/articles/delete/:id========================================
+// /admin/articles/delete/:id
 export const deleteArticle = async (req, res) => {
     const { id } = req.params;
     const sql = `DELETE FROM Article WHERE id = $1 RETURNING *;`;
@@ -106,6 +134,8 @@ export const deleteArticle = async (req, res) => {
     }
 };
 
+//=============================/admin/spares/getAll========================================
+// /admin/spares/getAll
 export const getAllSpares = async (req, res) => {
     const sql = `SELECT * FROM Spares;`;
 
@@ -118,6 +148,8 @@ export const getAllSpares = async (req, res) => {
     }
 };
 
+//=============================/admin/spares/:id/reorder========================================
+// /admin/spares/:id/reorder
 export const reorderSpares = async (req, res) => {
     const { SpareID, Quantity } = req.body;
     const sql = `UPDATE Spares SET Quantity = Quantity + $1 WHERE id = $2 RETURNING *;`;
@@ -132,7 +164,8 @@ export const reorderSpares = async (req, res) => {
     }
 };
 
-// this will be edited (I made some changes just to test it)
+//=============================/admin/services/add========================================
+// /admin/services/add
 export const addService = async (req, res) => {
     const { Name, Description, Cost, MaintenanceTime, IsCommon } = req.body;
     const sql = `INSERT INTO Service (Description, Cost, MaintenanceTime, IsCommon) VALUES ($1, $2, $3, $4) RETURNING id;`;
@@ -147,6 +180,8 @@ export const addService = async (req, res) => {
     }
 };
 
+//=============================/admin/technicians/createAccount========================================
+// /admin/technicians/createAccount
 export const createTechnicianAccount = async (req, res) => {
     const { Name, Email, Password, PhoneNo, Specialization } = req.body;
     const hashedPassword = bcrypt.hashSync(Password, 10);
