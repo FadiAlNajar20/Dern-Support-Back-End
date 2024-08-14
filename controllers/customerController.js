@@ -3,8 +3,12 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import sgMail from "@sendgrid/mail";
 import { verifyTokenEmail } from "../middlewares/authMiddleware.js";
+import {
+  assignTechnician,
+  generateEstimates,
+} from "../helper/helperMethods.js";
 
-//Not route 
+//Not route
 // generate a token
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -155,7 +159,7 @@ export const customerLogin = async (req, res) => {
     // plainTextPassword is the password provided by the user in the login request
     // hashedPassword is the password stored in the database in hashed format
     const { password } = result.rows[0];
-    const isMatch = await bcrypt.compare(Password, password);
+    const isMatch = bcrypt.compare(Password, password);
 
     //Check if the password matches the password stored in the database
     if (!isMatch) {
@@ -189,11 +193,13 @@ export const customerLogout = (req, res) => {
 // /customers/get-estimated-time-cost TODO: GET
 //
 export const customerGetEstimatedTimeAndCost = async (req, res) => {
+  const { Category } = req.body;
   try {
-    const estimatedTime = 10; //CALL FUNC FROM L
-    const estimatedCost = 10; //CALL FUNC FROM L
+    const { estimatedCost, estimatedCompletionTime } = await generateEstimates(
+      Category
+    );
     res.status(201).json({
-      EstimatedTime: estimatedTime,
+      EstimatedTime: estimatedCompletionTime,
       EstimatedCost: estimatedCost,
     });
   } catch (error) {
@@ -209,10 +215,6 @@ export const customerSendServiceRequest = async (req, res) => {
   const CustomerID = req.userId; //form authMiddleware
   const { ServiceID, Method } = req.body;
 
-  const technicianId = 1; //TODO: CALL assign function From L
-  //const maintenanceTime = 60; // Example time in minutes, replace with actual logic (Discuss)
-  const estimatedTime = 60; // Example time in minutes, replace with actual logic (CALL FUNC L)
-  // Create a Date object for a specific date and time
   //all field required
   if (!CustomerID || !ServiceID || !Method) {
     return res.status(400).json({ error: "All fields are required" });
@@ -220,6 +222,18 @@ export const customerSendServiceRequest = async (req, res) => {
 
   try {
     await client.query("BEGIN"); //FROM Tabnine Ai I will test it later
+
+    const sqlQuery = `SELECT Category FROM Service WHERE ID = $1`;
+
+    // get the category from the Service table
+    const categoryResult = await client.query(sqlQuery, [ServiceID]);
+    const category = categoryResult.rows[0].category;
+
+    const technicianId = await assignTechnician(category);
+
+    const { estimatedCost, estimatedCompletionTime } = await generateEstimates(
+      category
+    );
 
     //insert the new request into the database
     //and set the status to "Pending" (or we can discuss other statuses)//(TODO)
@@ -231,7 +245,7 @@ export const customerSendServiceRequest = async (req, res) => {
       VALUES ($1, $2,'Pending', $3, CURRENT_TIMESTAMP, $4, 'ServiceRequest')
       RETURNING id;
     `,
-      [CustomerID, technicianId, Method, estimatedTime]
+      [CustomerID, technicianId, Method, estimatedCompletionTime]
     );
     //TODO: Hassan--> check if customer id exists or not (CustomerID or ID)
 
@@ -317,11 +331,11 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
   const { Description, DeviceDeliveryMethod, Title, Category } = req.body;
   // TODO: CALL assign function From L
 
-  const technicianId = 1; //TODO: CALL assign function From L
-  const estimatedCost = 100.0; // Example cost, replace with actual logic (CALL FUNC L)
-  //const maintenanceTime = 60; // Example time in minutes, replace with actual logic (Discuss)
-  const estimatedTime = 60; // Example time in minutes, replace with actual logic (CALL FUNC L)
-  // Create a Date object for a specific date and time
+  const technicianId = await assignTechnician(Category);
+
+  const { estimatedCost, estimatedCompletionTime } = await generateEstimates(
+    Category
+  );
 
   // All fields required
   if (
@@ -343,7 +357,7 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
       VALUES ($1, $2,'Pending', $3, CURRENT_TIMESTAMP, $4,  'NewRequest')
       RETURNING id;
     `,
-      [CustomerID, technicianId, DeviceDeliveryMethod, estimatedTime]
+      [CustomerID, technicianId, DeviceDeliveryMethod, estimatedCompletionTime]
     );
 
     const requestID = requestResult.rows[0].id;
