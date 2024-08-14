@@ -1,38 +1,83 @@
 import { client } from "../server.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import sgMail from "@sendgrid/mail";
+import { verifyTokenEmail } from "../middlewares/authMiddleware.js";
 
+//Not route 
 // generate a token
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: "24h",
   });
 };
+//Not route
+// Sending email to customer account to verify his email
+const sendEmail = async (Email, token) => {
+  const verificationLink = `http://localhost:3005/customers/verify-email?token=${token}`;
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  const msg = {
+    to: Email,
+    from: "hasankarraz7@gmail.com",
+    subject: "Verify your email",
+    name: "Dern Support",
+    html: `<p>Thank you for signing up. Please verify your email by clicking the link below:</p>
+           <b><a href="${verificationLink}">Verify Email</a></b>`,
+  };
+
+  try {
+    await sgMail.send(msg);
+    return { success: true };
+  } catch (error) {
+    console.error("Error sending email", error);
+    return { success: false, error: error.message };
+  }
+};
+
+//This routes called automatically when the customer click on the link inside his email
+//=============================/customers//verify-email========================================
+// /customers//verify-email
+// Tested
+export const customerVerifyEmail = async (req, res) => {
+  const { token } = req.query;
+
+  try {
+    const decoded = verifyTokenEmail(token);
+    const userId = decoded.id;
+    await client.query('UPDATE "User" SET isVerified = true WHERE ID = $1', [
+      userId,
+    ]);
+
+    res.status(200).json({
+      success: true,
+      message: "Email verified successfully.",
+    });
+  } catch (error) {
+    console.error("Error verifying email", error.stack);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 //=============================/customers/signup========================================
 // /customers/signup
 // Tested
 export const customerSignup = async (req, res) => {
   const { Name, Email, Password, PhoneNumber, AccountType } = req.body;
-  //all field required
   if (!Name || !Email || !Password || !PhoneNumber || !AccountType) {
     return res.status(400).json({ error: "All fields are required" });
   }
 
   try {
-    //check if the Email is already exists (because in the schema the email is unique)
     const existingUser = await client.query(
       `SELECT * FROM "User" WHERE Email = $1`,
       [Email]
     );
 
-    console.log(existingUser.rows.length);
     if (existingUser.rows.length > 0) {
       return res.status(400).json({ error: "Email already exists" });
     }
-    //hash the password before storing it in the database using (bcrypt package)
-    const hashedPassword = await bcrypt.hash(Password, 10);
 
-    //insert the new user into the database
+    const hashedPassword = await bcrypt.hash(Password, 10);
     const result = await client.query(
       `
       INSERT INTO "User" (Name, Email, Password, PhoneNumber)
@@ -40,16 +85,10 @@ export const customerSignup = async (req, res) => {
     `,
       [Name, Email, hashedPassword, PhoneNumber]
     );
-    //TODO: Hassan--> check if id retrieved correctly or not (id or ID)
-    const userId = result.rows[0].id;
 
-    //Token
+    const userId = result.rows[0].id;
     const token = generateToken(userId);
-    res.status(200).json({
-      success: true,
-      token,
-    });
-    //insert the customer record into the database
+
     await client.query(
       `
       INSERT INTO Customer (UserID, AccountType)
@@ -58,18 +97,28 @@ export const customerSignup = async (req, res) => {
       [userId, AccountType]
     );
 
-    //TODO: WE should handle this with JWT
-    //generate and return JWT token
-    // const token = generateToken(userId);
-    // res.status(201).json({ token });
+    const emailResult = await sendEmail(Email, token);
+    if (!emailResult.success) {
+      return res
+        .status(500)
+        .json({ error: "Failed to send verification email" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      token,
+      message:
+        "Signup successful. Please check your email to verify your account.",
+    });
   } catch (error) {
     console.error("Error executing query", error.stack);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
-//=============================/customers/login=========================================
+//End TEST
 
+//=============================/customers/login=========================================
 // /customers/login
 // Tested
 export const customerLogin = async (req, res) => {
@@ -82,10 +131,11 @@ export const customerLogin = async (req, res) => {
 
   try {
     //check if the user exists in the database (using email as the unique identifier)
-    const sql = `SELECT Customer.id, "User".email, "User".password
+    const sql = `SELECT Customer.id, "User".email, "User".password, "User".isVerified 
     FROM "User"
     JOIN Customer ON "User".id = Customer.userid
     WHERE "User".email = $1;`;
+
     const result = await client.query(sql, [Email]);
 
     // check if the user is exist or not
@@ -93,6 +143,17 @@ export const customerLogin = async (req, res) => {
       return res.status(401).json({ error: "User not found :(" });
     }
 
+    // check if the user is verified or not
+    if (!result.rows[0].isverified) {
+      return res
+        .status(401)
+        .json({ error: "User is not verified. Please verify your email" });
+    }
+
+    // compare the password with the password stored in the database (using bcrypt)
+    // bcrypt.compare(plainTextPassword, hashedPassword)
+    // plainTextPassword is the password provided by the user in the login request
+    // hashedPassword is the password stored in the database in hashed format
     const { password } = result.rows[0];
     const isMatch = await bcrypt.compare(Password, password);
 
@@ -126,7 +187,7 @@ export const customerLogout = (req, res) => {
 
 //=============================/customers/get-estimated-time-cost========================================
 // /customers/get-estimated-time-cost TODO: GET
-// 
+//
 export const customerGetEstimatedTimeAndCost = async (req, res) => {
   try {
     const estimatedTime = 10; //CALL FUNC FROM L
@@ -152,8 +213,6 @@ export const customerSendServiceRequest = async (req, res) => {
   //const maintenanceTime = 60; // Example time in minutes, replace with actual logic (Discuss)
   const estimatedTime = 60; // Example time in minutes, replace with actual logic (CALL FUNC L)
   // Create a Date object for a specific date and time
-  const actualTime = new Date("2024-08-13T12:00:00Z"); // Example time in minutes, replace with actual logic (CALL FUNC L)
-
   //all field required
   if (!CustomerID || !ServiceID || !Method) {
     return res.status(400).json({ error: "All fields are required" });
@@ -162,24 +221,17 @@ export const customerSendServiceRequest = async (req, res) => {
   try {
     await client.query("BEGIN"); //FROM Tabnine Ai I will test it later
 
-
     //insert the new request into the database
     //and set the status to "Pending" (or we can discuss other statuses)//(TODO)
     //and discuss Urgency Values(TODO)
     const requestResult = await client.query(
       `
-      INSERT INTO Request (CustomerID, TechnicianID, Status, DeviceDeliveryMethod, CreatedDate, EstimatedTime, actualTime,
+      INSERT INTO Request (CustomerID, TechnicianID, Status, DeviceDeliveryMethod, CreatedDate, EstimatedTime,
       RequestType)
-      VALUES ($1, $2,'Pending', $3, CURRENT_TIMESTAMP, $4, $5, 'ServiceRequest')
+      VALUES ($1, $2,'Pending', $3, CURRENT_TIMESTAMP, $4, 'ServiceRequest')
       RETURNING id;
     `,
-      [
-        CustomerID,
-        technicianId,
-        Method,
-        estimatedTime,
-        actualTime,
-      ]
+      [CustomerID, technicianId, Method, estimatedTime]
     );
     //TODO: Hassan--> check if customer id exists or not (CustomerID or ID)
 
@@ -204,7 +256,7 @@ export const customerSendServiceRequest = async (req, res) => {
 
 //=============================/customers/send-feedback========================================
 // /customers/send-feedback
-// 
+//
 export const customerSendFeedback = async (req, res) => {
   const CustomerID = req.userId; //form authMiddleware
 
@@ -236,7 +288,7 @@ export const customerSendFeedback = async (req, res) => {
 
 //=============================/customers/my-requests/:id========================================
 // /customers/my-requests/:id
-// 
+//
 export const customerGetAllRequests = async (req, res) => {
   // const customerId = parseInt(req.params.id);
   //const customerId = req.params.id;
@@ -270,7 +322,6 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
   //const maintenanceTime = 60; // Example time in minutes, replace with actual logic (Discuss)
   const estimatedTime = 60; // Example time in minutes, replace with actual logic (CALL FUNC L)
   // Create a Date object for a specific date and time
-  const actualTime = new Date("2024-08-13T12:00:00Z"); // Example time in minutes, replace with actual logic (CALL FUNC L)
 
   // All fields required
   if (
@@ -287,18 +338,12 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
     // Insert the new request into the database
     const requestResult = await client.query(
       `
-      INSERT INTO Request (CustomerID, TechnicianID, Status, DeviceDeliveryMethod, CreatedDate, EstimatedTime, actualTime,
+      INSERT INTO Request (CustomerID, TechnicianID, Status, DeviceDeliveryMethod, CreatedDate, EstimatedTime,
       RequestType)
-      VALUES ($1, $2,'Pending', $3, CURRENT_TIMESTAMP, $4, $5, 'NewRequest')
+      VALUES ($1, $2,'Pending', $3, CURRENT_TIMESTAMP, $4,  'NewRequest')
       RETURNING id;
     `,
-      [
-        CustomerID,
-        technicianId,
-        DeviceDeliveryMethod,
-        estimatedTime,
-        actualTime,
-      ]
+      [CustomerID, technicianId, DeviceDeliveryMethod, estimatedTime]
     );
 
     const requestID = requestResult.rows[0].id;
