@@ -42,7 +42,7 @@ export const logout = (req, res) => {
 //=============================/admin/support-requests/update========================================
 // /admin/support-requests/update
 //Tested
-export const updateSupportRequest = async (req, res) => {
+export const updateSupportRequestStatus = async (req, res) => {
     const { id, status } = req.body;
     const sql = `UPDATE request SET status = $1 WHERE id = $2 RETURNING *;`;
     const values = [status, id];
@@ -100,9 +100,9 @@ export const getAllFeedback = async (req, res) => {
 // /admin/articles/add
 //Tested
 export const addArticle = async (req, res) => {
-    const { title, content, publishedDate } = req.body;
-    const sql = `INSERT INTO Article (Title, content, publishedDate) VALUES ($1, $2, $3) RETURNING id;`;
-    const values = [title, content, publishedDate];
+    const { title, image, description } = req.body;
+    const sql = `INSERT INTO Article (Title, Image, description) VALUES ($1, $2, $3) RETURNING id;`;
+    const values = [title, image, description];
 
     try {
         const result = await client.query(sql, values);
@@ -117,13 +117,16 @@ export const addArticle = async (req, res) => {
 // /admin/articles/update
 //Tested
 export const updateArticle = async (req, res) => {
-    const { id, title, content } = req.body;
-    const sql = `UPDATE Article SET title = $1, content = $2 WHERE id = $3 RETURNING *;`;
-    const values = [title, content, id];
+    const { id, title, image, description  } = req.body;
+    const sql = `UPDATE Article SET title = $1, image = $2, description = $3 WHERE id = $4 RETURNING *;`;
+    const values = [title, image, description, id];
 
     try {
         const result = await client.query(sql, values);
+        if(result.rowCount > 0)
         res.json({ message: 'Article updated', article: result.rows[0] });
+    else
+    res.json({ message: 'Article not found', article: result.rows[0] });
     } catch (err) {
         console.error("Update article error:", err);
         res.status(500).json({ error: "Failed to update article" });
@@ -185,13 +188,21 @@ export const reorderSpares = async (req, res) => {
 // /admin/services/add
 //Tested
 export const addService = async (req, res) => {
-    const { Description, Cost, MaintenanceTime, IsCommon } = req.body;
-    const sql = `INSERT INTO Service (Description, Cost, MaintenanceTime, IsCommon) VALUES ($1, $2, $3, $4) RETURNING id;`;
-    const values = [Description, Cost, MaintenanceTime, IsCommon];
+    const { customerId, title, category, image, issueDescription, estimatedcost, maintenanceTime, isCommon } = req.body;
+    const sql = `INSERT INTO Service (customerId, title, category, estimatedcost, maintenanceTime, image, isCommon, issueDescription) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id;`;
+    const values = [customerId, title, category, estimatedcost, maintenanceTime, image, isCommon, issueDescription];
 
     try {
-        const result = await client.query(sql, values);
-        res.json({ message: 'Service added', serviceId: result.rows[0].id });
+        const fetchCustomer = await client.query(`SELECT * FROM Customer WHERE userid = $1`, [customerId]);
+        
+        if(fetchCustomer.rowCount > 0){
+
+            const result = await client.query(sql, values);
+            res.json({ message: 'Service added', serviceId: result.rows[0].id });
+        }else{
+
+            res.json({ message: 'Customer not found'});
+        }
     } catch (err) {
         console.error("Add service error:", err);
         res.status(500).json({ error: "Failed to add service" });

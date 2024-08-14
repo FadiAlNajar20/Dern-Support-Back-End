@@ -2,7 +2,7 @@ import express from 'express';
 import {
     login,
     logout,
-    updateSupportRequest,
+    updateSupportRequestStatus,
     getAllRequests,
     getAllFeedback,
     addArticle, 
@@ -19,7 +19,7 @@ const router = express.Router();
 
 router.post('/login', login);
 router.post('/logout', verifyToken, logout);
-router.put('/support-requests/update', verifyToken, updateSupportRequest);
+router.put('/support-requests/update', verifyToken, updateSupportRequestStatus);
 router.get('/support-requests/getAll', verifyToken, getAllRequests);
 router.get('/feedback/getAll', verifyToken, getAllFeedback);
 router.post('/articles/add', verifyToken, addArticle);
