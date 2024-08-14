@@ -1,115 +1,102 @@
--- Create tables in the necessary order to satisfy foreign key constraints
-
--- User table
+-- Table: "User"
 CREATE TABLE "User" (
-    ID SERIAL PRIMARY KEY,
-    Name VARCHAR(255) NOT NULL,
-    Email VARCHAR(255) NOT NULL,
-    Password VARCHAR(255) NOT NULL,
-    PhoneNumber VARCHAR(50),
-    IsVerified BOOLEAN DEFAULT FALSE
+    ID serial PRIMARY KEY,
+    Name varchar(255) NOT NULL,
+    Email varchar(255) UNIQUE NOT NULL,
+    Password varchar(255) NOT NULL,
+    PhoneNumber varchar(20),
+    IsVerified boolean DEFAULT FALSE
 );
 
--- Admin table
+-- Table: Admin
 CREATE TABLE Admin (
-    ID SERIAL PRIMARY KEY,
-    UserID INT NOT NULL,
-    FOREIGN KEY (UserID) REFERENCES "User" (ID) ON DELETE CASCADE
+    ID serial PRIMARY KEY,
+    UserID int REFERENCES "User"(ID) ON DELETE CASCADE
 );
 
--- Technician table
+-- Table: Technician
 CREATE TABLE Technician (
-    ID SERIAL PRIMARY KEY,
-    UserID INT NOT NULL,
-    Specialization VARCHAR(255),
-    Availability TIMESTAMP,
-    FOREIGN KEY (UserID) REFERENCES "User" (ID) ON DELETE CASCADE
+    ID serial PRIMARY KEY,
+    UserID int REFERENCES "User"(ID) ON DELETE CASCADE,
+    Specialization varchar(255),
+    Availability timestamp
 );
 
--- Customer table
+-- Table: Customer
 CREATE TABLE Customer (
-    ID SERIAL PRIMARY KEY,
-    UserID INT NOT NULL,
-    AccountType VARCHAR(255),
-    FOREIGN KEY (UserID) REFERENCES "User" (ID) ON DELETE CASCADE
+    ID serial PRIMARY KEY,
+    UserID int REFERENCES "User"(ID) ON DELETE CASCADE,
+    AccountType varchar(50)
 );
 
--- Service table
-CREATE TABLE Service (
-    ID SERIAL PRIMARY KEY,
-    CustomerID INT NOT NULL,
-    Title VARCHAR(255),
-    Category VARCHAR(255),
-    EstimatedCost DECIMAL(10, 2),
-    MaintenanceTime INT,
-    Image VARCHAR(255),
-    IsCommon BOOLEAN DEFAULT FALSE,
-    IssueDescription VARCHAR(255),
-    FOREIGN KEY (CustomerID) REFERENCES Customer (ID) 
-);
-
--- Request table
-CREATE TABLE Request (
-    ID SERIAL PRIMARY KEY,
-    CustomerID INT NOT NULL,
-    TechnicianID INT NOT NULL,
-    Status VARCHAR(50),
-    DeviceDeliveryMethod VARCHAR(255),
-    CreatedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    EstimatedTime INT,
-    ActualTime INT,
-    ActualCost DECIMAL(10, 2),
-    RequestType VARCHAR(255),
-    FOREIGN KEY (CustomerID) REFERENCES Customer (ID) ON DELETE CASCADE,
-    FOREIGN KEY (TechnicianID) REFERENCES Technician (ID) ON DELETE CASCADE
-);
-
--- NewRequest table
-CREATE TABLE NewRequest (
-    ID SERIAL PRIMARY KEY,
-    IssueDescription VARCHAR(255),
-    Title VARCHAR(255),
-    Category VARCHAR(255),
-    EstimatedCost DECIMAL(10, 2),
-    MaintenanceTime INT,
-    Image VARCHAR(255),
-    RequestID INT NOT NULL,
-    FOREIGN KEY (RequestID) REFERENCES Request (ID) ON DELETE CASCADE
-);
-
--- ServiceRequest table
-CREATE TABLE ServiceRequest (
-    ID SERIAL PRIMARY KEY,
-    ServiceID INT NOT NULL,
-    RequestID INT NOT NULL,
-    FOREIGN KEY (ServiceID) REFERENCES Service (ID) ON DELETE CASCADE,
-    FOREIGN KEY (RequestID) REFERENCES Request (ID) ON DELETE CASCADE
-);
-
--- Feedback table
-CREATE TABLE Feedback (
-    ID SERIAL PRIMARY KEY,
-    CustomerID INT NOT NULL,
-    ServiceID INT NOT NULL,
-    Rating INT,
-    Comment VARCHAR(255),
-    FOREIGN KEY (CustomerID) REFERENCES Customer (ID) ON DELETE CASCADE,
-    FOREIGN KEY (ServiceID) REFERENCES Service (ID) ON DELETE CASCADE
-);
-
--- Spares table
+-- Table: Spares
 CREATE TABLE Spares (
-    ID SERIAL PRIMARY KEY,
-    Name VARCHAR(255) NOT NULL,
-    Quantity INT NOT NULL,
-    ReorderThreshold INT NOT NULL
+    ID serial PRIMARY KEY,
+    Name varchar(255) NOT NULL,
+    Quantity int NOT NULL,
+    ReorderThreshold int NOT NULL
 );
 
--- Article table
+-- Table: Request
+CREATE TABLE Request (
+    ID serial PRIMARY KEY,
+    CustomerID int REFERENCES Customer(ID) ON DELETE SET NULL,
+    TechnicianID int REFERENCES Technician(ID) ON DELETE SET NULL,
+    Status varchar(50) NOT NULL,
+    DeviceDeliveryMethod varchar(255),
+    CreatedDate timestamp DEFAULT CURRENT_TIMESTAMP,
+    EstimatedTime int,
+    ActualTime_deadline timestamp,
+    RequestType varchar(255)
+);
+
+-- Table: NewRequest
+CREATE TABLE NewRequest (
+    ID serial PRIMARY KEY,
+    IssueDescription varchar(255),
+    Title varchar(255),
+    Category varchar(255),
+    EstimatedCost decimal(10, 2),
+    ActualCost decimal(10, 2),
+    MaintenanceTime int,
+    Image varchar(255),
+    RequestID int REFERENCES Request(ID) ON DELETE CASCADE
+);
+
+-- Table: Service
+CREATE TABLE Service (
+    ID serial PRIMARY KEY,
+    CustomerID int REFERENCES Customer(ID) ON DELETE SET NULL,
+    Title varchar(255),
+    Category varchar(255),
+    ActualCost decimal(10, 2),
+    MaintenanceTime int,
+    Image varchar(255),
+    IsCommon boolean DEFAULT FALSE,
+    IssueDescription varchar(255)
+);
+
+-- Table: ServiceRequest
+CREATE TABLE ServiceRequest (
+    ID serial PRIMARY KEY,
+    ServiceID int REFERENCES Service(ID) ON DELETE CASCADE,
+    RequestID int REFERENCES Request(ID) ON DELETE CASCADE
+);
+
+-- Table: Feedback
+CREATE TABLE Feedback (
+    ID serial PRIMARY KEY,
+    CustomerID int REFERENCES Customer(ID) ON DELETE SET NULL,
+    ServiceID int REFERENCES Service(ID) ON DELETE SET NULL,
+    Rating int NOT NULL,
+    Comment varchar(255)
+);
+
+-- Table: Article
 CREATE TABLE Article (
-    ID SERIAL PRIMARY KEY,
-    Title VARCHAR(255),
-    Image VARCHAR(255),
-    Description VARCHAR(255),
-    CreatedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ID serial PRIMARY KEY,
+    Title varchar(255) NOT NULL,
+    Image varchar(255),
+    Description varchar(255),
+    CreatedDate timestamp DEFAULT CURRENT_TIMESTAMP
 );

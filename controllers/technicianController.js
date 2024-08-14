@@ -3,10 +3,67 @@ import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
 
 
-//=============================/technicians/login=========================================
 
-// /technicians/login
-//TODO: test this 
+
+async function updateTechnicianAvailability(technicianId, maintenanceTime) {
+  try {
+    // Fetch the current availability
+    const result = await client.query(
+      'SELECT availability FROM Technician WHERE id = $1',
+      [technicianId]
+    );
+    let currentAvailability = new Date(result.rows[0].availability);
+
+    // Set working hours (08:00 to 17:00)
+    const workStart = new Date(currentAvailability);
+    workStart.setHours(8, 0, 0, 0);
+    const workEnd = new Date(currentAvailability);
+    workEnd.setHours(17, 0, 0, 0);
+
+    let hoursToAdd = maintenanceTime;
+
+    // If the current availability is before the working hours, set it to workStart
+    if (currentAvailability < workStart) {
+      currentAvailability = workStart;
+    }
+
+    while (hoursToAdd > 0) {
+      // Calculate the end of the working day
+      let endOfDay = new Date(currentAvailability);
+      endOfDay.setHours(17, 0, 0, 0);
+
+      // Calculate the time remaining until the end of the day
+      let remainingHoursToday = (endOfDay - currentAvailability) / (1000 * 60 * 60);
+
+      if (hoursToAdd <= remainingHoursToday) {
+        // Update availability within the same day
+        currentAvailability.setHours(currentAvailability.getHours() + hoursToAdd);
+        hoursToAdd = 0;
+      } else {
+        // Move to the next workday
+        hoursToAdd -= remainingHoursToday;
+        currentAvailability.setDate(currentAvailability.getDate() + 1);
+        currentAvailability.setHours(8, 0, 0, 0);
+      }
+    }
+
+    // Update the technician's availability in the database
+    const updatedResult = await client.query(
+      'UPDATE Technician SET availability = $1 WHERE id = $2 RETURNING availability',
+      [currentAvailability, technicianId]
+    );
+
+    // Return the new availability in timestamp without time zone format
+    return updatedResult.rows[0].availability;
+     //return moment(updatedResult.rows[0].availability).format('YYYY-MM-DD HH:mm:ss');
+  } catch (error) {
+    console.error('Error updating availability:', error);
+    throw error;
+  }
+}
+//=============================/technician/login=========================================
+// /technician/login
+// Tested  
 export const technicianLogin = async (req, res) => {
     const { Email, Password } = req.body;
   
@@ -32,7 +89,8 @@ export const technicianLogin = async (req, res) => {
       }
   
       const { password } = result.rows[0];
-      const isMatch = await bcrypt.compare(Password, password);
+      const isMatch =  bcrypt.compare(Password, password);
+      console.log(password, Email, Password);
   
       //Check if the password matches the password stored in the database
       if (!isMatch) {
@@ -51,98 +109,72 @@ export const technicianLogin = async (req, res) => {
       res.status(500).json({ error: "Internal server error" });
     }
   };
-  
-  //=============================/technicians/logout========================================
-  
-  // /technicians/logout
+  //=============================/technician/logout=========================================
+ // /technician/logout
   export const technicianLogout = (req, res) => {
     //TODO: based on the middleware authentication
     // JWT token invalidation would be handled here
     res.status(200).json({ message: "Logged out successfully" });
   };
   
-  //=============================/technicians/assigned-request/update===============================
-  // /technicians/assigned-request/update
-  async function updateAvailability(technicianId, deadline) {
-    try {
-      // Get the current availability of the technician
-      const res = await client.query('SELECT availability FROM Technician WHERE id = $1', [technicianId]);
-      if (res.rows.length === 0) {
-        console.log('Technician not found');
-        return;
-      }
-  
-      let availability = new Date(res.rows[0].availability);
-      const deadlineDuration = new Date(deadline) - new Date(); // Deadline duration in milliseconds
-  
-      // Calculate new availability time
-      let endAvailability = new Date(availability.getTime() + deadlineDuration);
-  
-      // Make sure endAvailability is within working hours
-      let workStart = new Date(availability);
-      workStart.setHours(8, 0, 0, 0); // 8 AM
-  
-      let workEnd = new Date(availability);
-      workEnd.setHours(17, 0, 0, 0); // 5 PM
-  
-      if (endAvailability < workStart) {
-        endAvailability = workStart;
-      } else if (endAvailability > workEnd) {
-        // If the end availability is outside working hours, adjust it to the next working day
-        endAvailability = new Date(endAvailability);
-        endAvailability.setDate(endAvailability.getDate() + ((8 - endAvailability.getDay() + 7) % 7)); // Move to next Monday
-        endAvailability.setHours(8, 0, 0, 0);
-      }
-  
-      // Update the availability in the database
-      await client.query('UPDATE Technician SET availability = $1 WHERE id = $2', [endAvailability, technicianId]);
-      console.log('Availability updated successfully');
-    } catch (error) {
-      console.error('Error updating availability:', error);
-    } finally {
-      await client.end();
-    }
-  }
-//updateAvailability(1, '2024-08-15T12:00:00Z');
-
+  //=============================/technician/assigned-request/update===============================
+  // /technician/assigned-request/update 
+  //Tested 
+  //if it is newRequest type send MaintenanceTime
   export const updateAssignedRequest = async (req, res) => {
-    const TechnicianId = req.userid;
-    const {ActualTime, RequestId}= req.body;
+    const TechnicianId = req.userId;
+    //if it is NewRequest send MaintenanceTime
+    //if it is ServiceRequest get MaintenanceTime from service table
+    let {MaintenanceTime , RequestId}= req.body;
     try {
+      let result1= await client.query(`SELECT RequestType FROM Request WHERE id= $1`, [RequestId]);
+      const {requesttype}= result1.rows[0];
+      if(requesttype=="ServiceRequest")
+      {
+        result1 = await client.query
+        (`SELECT MaintenanceTime FROM Service JOIN ServiceRequest ON Service.id = ServiceRequest.ServiceId WHERE ServiceRequest.RequestId = $1`,[RequestId]
+        );
+       MaintenanceTime= result1.rows[0].maintenancetime;
+      }
+
+     // Update technician's availability after updating request by technician
+        const ActualTime= await updateTechnicianAvailability(TechnicianId, MaintenanceTime); 
+      // update the request with the ActualTime and status
         const result = await client.query(
-            `UPDATE Request SET actualtime = $1, status=2$ WHERE id = $3 RETURNING *;`
+            `UPDATE Request SET actualtime = $1, status=$2 WHERE id = $3 RETURNING *;`
             , [ActualTime, "InProgress", RequestId]
         );
-        updateAvailability(TechnicianId, ActualTime); // Update technician's availability after updating request
-        res.json({ message: 'Request successfully', request: result.rows[0] });
+        
+        res.json({ message: 'Update Request Successfully', request: result.rows[0] });
     } catch (err) {
         console.error("Update Request error:", err);
         res.status(500).json({ error: "Failed to update Request" });
     }
   };
-  //=============================/technicians/completed-request/update===============================
-  // /technicians/completed-request/update
+  //=============================/technician/completed-request/update===============================
+  // /technician/completed-request/update
+  //Tested
+  //if it is newRequest type send ActualCost
   export const updateCompletedRequest = async (req, res) => {
-    const TechnicianId = req.userid;
-    const {ActualCost, MaintenanceTime, RequestId}= req.body;
+    const {ActualCost, RequestId}= req.body;
     try {
       const result1= await client.query(`SELECT RequestType FROM Request WHERE id= $1`, [RequestId]);
-      const {RequestType}= result1.rows[0];
+      const {requesttype}= result1.rows[0];
 
       const result = await client.query(
         `UPDATE Request SET status=$1 WHERE id = $2 RETURNING *;`
         , ["Complete", RequestId]
     );
 
-      if(RequestType=="NewRequest")
+      if(requesttype=="NewRequest")
       {
         await client.query(
-          `Update NewRequest SET ActualCost=$1, MaintenanceTime= $2 WHERE RequestId = $3;`,
-          [ActualCost, MaintenanceTime, RequestId]
+          `Update NewRequest SET ActualCost=$1 WHERE RequestId = $2;`,
+          [ActualCost, RequestId]
         );
       }
  
-        res.json({ message: 'Request successfully', request: result.rows[0] });
+        res.json({ message: 'Update Request Successfully', request: result.rows[0] });
     } catch (err) {
         console.error("Update Request error:", err);
         res.status(500).json({ error: "Failed to update Request" });
@@ -150,8 +182,9 @@ export const technicianLogin = async (req, res) => {
   };
   //=============================/requests/assigned========================================
   // /requests/assigned
+  // Tested
 export const GetAssignedRequests = async (req, res) => {
-    const TechnicianId = req.userid;
+    const TechnicianId = req.userId;
     try {
         const result = await client.query(
             `SELECT * FROM Request WHERE technicianid = $1;`
