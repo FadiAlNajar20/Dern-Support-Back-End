@@ -96,6 +96,59 @@ export const getAllFeedback = async (req, res) => {
     }
 };
 
+//=============================/admin/feedback/relatedToService/:id==========================
+// /admin/feedback/relatedToService/:id
+//Tested
+export const getAllFeedbackRelatedToService = async (req, res) => {
+    const serviceId = req.params.id;
+    const sql = `SELECT * FROM Feedback WHERE serviceid = $1;`;
+
+    try {
+        const result = await client.query(sql, [serviceId]);
+        if(rowCount > 0)
+        res.json(result.rows);
+    else
+      res.status(404).json({ error: "No feedbacks on this services, or service not found" });
+
+    } catch (err) {
+        console.error("Get all feedback related to service error:", err);
+        res.status(500).json({ error: "Failed to fetch feedback related to this service" });
+    }
+};
+
+
+//=============================/admin/feedback/relatedToService/avg/:id==========================
+// /admin/feedback/relatedToService/avg/:id
+//Tested
+export const getAVGForAllFeedbackRelatedToService = async (req, res) => {
+    const serviceId = req.params.id;
+    
+    const sql = `
+        SELECT AVG(rating) AS average_rating, COUNT(*) AS total_feedbacks 
+        FROM Feedback 
+        WHERE serviceid = $1;
+    `;
+
+    try {
+        const result = await client.query(sql, [serviceId]);
+        const { average_rating, total_feedbacks } = result.rows[0];
+
+        if (total_feedbacks > 0) {
+            res.json({ 
+                averageRating: average_rating, 
+                totalFeedbacks: total_feedbacks 
+            });
+        } else {
+            res.status(404).json({ error: "No feedbacks for this service, or service not found" });
+        }
+
+    } catch (err) {
+        console.error("Get all feedback related to service error:", err);
+        res.status(500).json({ error: "Failed to fetch feedback related to this service" });
+    }
+};
+
+
 //=============================/admin/articles/add========================================
 // /admin/articles/add
 //Tested
