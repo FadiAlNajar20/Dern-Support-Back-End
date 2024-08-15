@@ -351,7 +351,7 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
   const { Description, DeviceDeliveryMethod, Title, Category } = req.body;
   // TODO: CALL assign function From L
 
-  const technicianId = await assignTechnician(Category);
+  const technicianId = 1//await assignTechnician(Category);
 
   const { estimatedCost, estimatedCompletionTime } = await generateEstimates(
     Category
@@ -377,7 +377,8 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
       VALUES ($1, $2,'Pending', $3, CURRENT_TIMESTAMP, $4,  'NewRequest')
       RETURNING id;
     `,
-      [CustomerID, technicianId, DeviceDeliveryMethod, estimatedCompletionTime]
+     // [CustomerID, technicianId, DeviceDeliveryMethod, estimatedCompletionTime]
+      [CustomerID, technicianId, DeviceDeliveryMethod, 2]
     );
 
     const requestID = requestResult.rows[0].id;
@@ -386,17 +387,22 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
     // Get image link here if necessary
     // TEST =================TODO========================
     // Check nullable
-    const filename = req.file.filename;
-    console.log(filename);
-    const imgUrl = `${process.env.SERVER_URL}/image/${filename}`;
+    let imgUrl;
+    if (req.file !== undefined) {
+      // Variable is undefined
+      const filename = req.file.filename;
+      console.log(filename);
+      imgUrl = `${process.env.SERVER_URL}/image/${filename}`;
+    }
+    
     console.log(imgUrl);
     // TEST =================TODO========================
     await client.query(
       `
       INSERT INTO NewRequest (IssueDescription, Title, Category,  EstimatedCost, Image, RequestID)
-      VALUES ($1, $2, $3, $4, $5);
+      VALUES ($1, $2, $3, $4, $5, $6);
     `,
-      [Description, Title, Category, estimatedCost, imgUrl, requestID]
+      [Description, Title, Category, estimatedCost, imgUrl || null, requestID]
     );
 
     res.status(201).json({ message: "Request submitted" });

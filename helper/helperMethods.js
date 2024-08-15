@@ -13,13 +13,18 @@ export const assignTechnician = async (requestCategory) => {
       [requestCategory]
     );
 
+    // Check if a technician was found
+    if (technicianResult.rows.length === 0) {
+      throw new Error("No available technician found");
+    }
+
     const technicianId = technicianResult.rows[0].id;
 
     // // Step 2: Assign the most available technician to the request
     // await client.query(
     //   `
-    //     UPDATE Request 
-    //     SET TechnicianId = $1 
+    //     UPDATE Request
+    //     SET TechnicianId = $1
     //     WHERE Id = $2;
     //     `,
     //   [technicianId, requestId]
