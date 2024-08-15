@@ -71,7 +71,7 @@ export const generateEstimates = async (category) => {
   }
 
   const technician = result.rows[0];
-  const estimatedCompletionTime = technician.availability;
+  const estimatedCompletionTime = technician.availability;//""
 
   return { estimatedCost, estimatedCompletionTime };
 };

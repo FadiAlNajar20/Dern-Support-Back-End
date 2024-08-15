@@ -2,6 +2,14 @@ import { client } from "../server.js";
 import bcrypt from "bcrypt";
 import { io } from "../server.js";
 import { v4 as uuidv4 } from 'uuid';
+import jwt from "jsonwebtoken";
+import sgMail from "@sendgrid/mail";
+import { verifyTokenEmail } from "../middlewares/authMiddleware.js";
+import {
+  assignTechnician,
+  generateEstimates,
+} from "../helper/helperMethods.js";
+
 
 export const testIo = async (req, res) => {
   console.log("Request received");
@@ -20,13 +28,6 @@ export const testIo = async (req, res) => {
   res.status(200).json("done");
 };
 
-import jwt from "jsonwebtoken";
-import sgMail from "@sendgrid/mail";
-import { verifyTokenEmail } from "../middlewares/authMiddleware.js";
-import {
-  assignTechnician,
-  generateEstimates,
-} from "../helper/helperMethods.js";
 
 //Not route
 // generate a token
@@ -211,7 +212,7 @@ export const customerLogout = (req, res) => {
 
 //=============================/customers/get-estimated-time-cost========================================
 // /customers/get-estimated-time-cost TODO: GET
-//
+//Tested
 export const customerGetEstimatedTimeAndCost = async (req, res) => {
   const { Category } = req.body;
   try {
@@ -345,13 +346,14 @@ export const customerGetAllRequests = async (req, res) => {
 
 //=============================/customers/final-approval-support-request========================================
 // /customers/final-approval-support-request
+//Tested
 export const customerSenApprovedSupportRequest = async (req, res) => {
   const CustomerID = req.userId; // from authMiddleware
   console.log(CustomerID);
   const { Description, DeviceDeliveryMethod, Title, Category } = req.body;
   // TODO: CALL assign function From L
 
-  const technicianId = 1//await assignTechnician(Category);
+  const technicianId = await assignTechnician(Category);
 
   const { estimatedCost, estimatedCompletionTime } = await generateEstimates(
     Category
@@ -377,8 +379,8 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
       VALUES ($1, $2,'Pending', $3, CURRENT_TIMESTAMP, $4,  'NewRequest')
       RETURNING id;
     `,
-     // [CustomerID, technicianId, DeviceDeliveryMethod, estimatedCompletionTime]
-      [CustomerID, technicianId, DeviceDeliveryMethod, 2]
+      [CustomerID, technicianId, DeviceDeliveryMethod, estimatedCompletionTime]
+     // [CustomerID, technicianId, DeviceDeliveryMethod, 2]
     );
 
     const requestID = requestResult.rows[0].id;
@@ -402,7 +404,7 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
       INSERT INTO NewRequest (IssueDescription, Title, Category,  EstimatedCost, Image, RequestID)
       VALUES ($1, $2, $3, $4, $5, $6);
     `,
-      [Description, Title, Category, estimatedCost, imgUrl || null, requestID]
+      [Description, Title, Category, estimatedCost, imgUrl, requestID]
     );
 
     res.status(201).json({ message: "Request submitted" });
