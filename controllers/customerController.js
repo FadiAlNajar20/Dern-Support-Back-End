@@ -231,9 +231,10 @@ export const customerGetEstimatedTimeAndCost = async (req, res) => {
 
 //=============================/customers/send-service-request========================================
 // /customers/send-service-request
-//
+//Tested
 export const customerSendServiceRequest = async (req, res) => {
   const CustomerID = req.userId; //form authMiddleware
+  //console.log(CustomerID);
   const { ServiceID, Method } = req.body;
 
   //all field required
@@ -291,7 +292,7 @@ export const customerSendServiceRequest = async (req, res) => {
 
 //=============================/customers/send-feedback========================================
 // /customers/send-feedback
-//
+//Tested
 export const customerSendFeedback = async (req, res) => {
   const CustomerID = req.userId; //form authMiddleware
 
@@ -321,9 +322,9 @@ export const customerSendFeedback = async (req, res) => {
   }
 };
 
-//=============================/customers/my-requests/:id========================================
-// /customers/my-requests/:id
-//
+//=============================/customers/my-requests========================================
+// /customers/my-requests
+// Tested
 export const customerGetAllRequests = async (req, res) => {
   // const customerId = parseInt(req.params.id);
   //const customerId = req.params.id;
@@ -416,6 +417,7 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
 
 //=============================/customers/getFeedback========================================
 // /customers/getFeedback
+//Tested
 export const customerGetFeedback = async (req, res) => {
   //// Get one feedback based on the service ID and customer ID
   const { serviceId } = req.params;
