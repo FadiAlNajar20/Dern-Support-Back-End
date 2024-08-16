@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 
 // Middleware to verify JWT token before accessing routes
 export const verifyToken = (req, res, next) => {
+
     const token = req.headers['authorization'];
     if (!token) return res.status(403).json({ message: 'No token provided' });
 

@@ -72,10 +72,12 @@ export const customerVerifyEmail = async (req, res) => {
       userId,
     ]);
 
+    res.redirect(302, 'http://localhost:5173/verify-email');
     res.status(200).json({
       success: true,
       message: "Email verified successfully.",
     });
+    consol
   } catch (error) {
     console.error("Error verifying email", error.stack);
     res.status(500).json({ error: "Internal server error" });
@@ -213,6 +215,7 @@ export const customerLogout = (req, res) => {
 // /customers/get-estimated-time-cost TODO: GET
 //
 export const customerGetEstimatedTimeAndCost = async (req, res) => {
+  console.log(req.body);
   const { Category } = req.body;
   try {
     const { estimatedCost, estimatedCompletionTime } = await generateEstimates(
