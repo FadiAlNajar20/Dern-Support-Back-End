@@ -145,7 +145,7 @@ export const technicianLogin = async (req, res) => {
             , [ActualTime, "InProgress", RequestId]
         );
         
-        res.json({ message: 'Update Request Successfully', request: result.rows[0] });
+        res.json({ message: 'Request Updated Successfully', request: result.rows[0] });
     } catch (err) {
         console.error("Update Request error:", err);
         res.status(500).json({ error: "Failed to update Request" });
@@ -174,14 +174,14 @@ export const technicianLogin = async (req, res) => {
         );
       }
  
-        res.json({ message: 'Update Request Successfully', request: result.rows[0] });
+        res.json({ message: 'Request Updated Successfully', request: result.rows[0] });
     } catch (err) {
         console.error("Update Request error:", err);
         res.status(500).json({ error: "Failed to update Request" });
     }
   };
-  //=============================/requests/assigned========================================
-  // /requests/assigned
+  //=============================/technician/requests/assigned========================================
+  // technician/requests/assigned
   // Tested
 export const GetAssignedRequests = async (req, res) => {
     const TechnicianId = req.userId;

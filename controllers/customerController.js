@@ -2,6 +2,14 @@ import { client } from "../server.js";
 import bcrypt from "bcrypt";
 import { io } from "../server.js";
 import { v4 as uuidv4 } from 'uuid';
+import jwt from "jsonwebtoken";
+import sgMail from "@sendgrid/mail";
+import { verifyTokenEmail } from "../middlewares/authMiddleware.js";
+import {
+  assignTechnician,
+  generateEstimates,
+} from "../helper/helperMethods.js";
+
 
 export const testIo = async (req, res) => {
   console.log("Request received");
@@ -20,13 +28,6 @@ export const testIo = async (req, res) => {
   res.status(200).json("done");
 };
 
-import jwt from "jsonwebtoken";
-import sgMail from "@sendgrid/mail";
-import { verifyTokenEmail } from "../middlewares/authMiddleware.js";
-import {
-  assignTechnician,
-  generateEstimates,
-} from "../helper/helperMethods.js";
 
 //Not route
 // generate a token
@@ -213,7 +214,7 @@ export const customerLogout = (req, res) => {
 
 //=============================/customers/get-estimated-time-cost========================================
 // /customers/get-estimated-time-cost TODO: GET
-//
+//Tested
 export const customerGetEstimatedTimeAndCost = async (req, res) => {
   console.log(req.body);
   const { Category } = req.body;
@@ -233,9 +234,10 @@ export const customerGetEstimatedTimeAndCost = async (req, res) => {
 
 //=============================/customers/send-service-request========================================
 // /customers/send-service-request
-//
+//Tested
 export const customerSendServiceRequest = async (req, res) => {
   const CustomerID = req.userId; //form authMiddleware
+  //console.log(CustomerID);
   const { ServiceID, Method } = req.body;
 
   //all field required
@@ -293,7 +295,7 @@ export const customerSendServiceRequest = async (req, res) => {
 
 //=============================/customers/send-feedback========================================
 // /customers/send-feedback
-//
+//Tested
 export const customerSendFeedback = async (req, res) => {
   const CustomerID = req.userId; //form authMiddleware
 
@@ -323,9 +325,9 @@ export const customerSendFeedback = async (req, res) => {
   }
 };
 
-//=============================/customers/my-requests/:id========================================
-// /customers/my-requests/:id
-//
+//=============================/customers/my-requests========================================
+// /customers/my-requests
+// Tested
 export const customerGetAllRequests = async (req, res) => {
   // const customerId = parseInt(req.params.id);
   //const customerId = req.params.id;
@@ -348,8 +350,10 @@ export const customerGetAllRequests = async (req, res) => {
 
 //=============================/customers/final-approval-support-request========================================
 // /customers/final-approval-support-request
+//Tested
 export const customerSenApprovedSupportRequest = async (req, res) => {
-  const CustomerID = req.userId; // from authMiddleware
+  console.log(req.body);
+  const CustomerID = req.userId;
   console.log(CustomerID);
   const { Description, DeviceDeliveryMethod, Title, Category } = req.body;
   // TODO: CALL assign function From L
@@ -381,6 +385,7 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
       RETURNING id;
     `,
       [CustomerID, technicianId, DeviceDeliveryMethod, estimatedCompletionTime]
+     // [CustomerID, technicianId, DeviceDeliveryMethod, 2]
     );
 
     const requestID = requestResult.rows[0].id;
@@ -389,20 +394,26 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
     // Get image link here if necessary
     // TEST =================TODO========================
     // Check nullable
-    const filename = req.file.filename;
-    console.log(filename);
-    const imgUrl = `${process.env.SERVER_URL}/image/${filename}`;
+    let imgUrl;
+    if (req.file !== undefined) {
+      // Variable is undefined
+      const filename = req.file.filename;
+      console.log(filename);
+      imgUrl = `${process.env.SERVER_URL}/image/${filename}`;
+    }
+    
     console.log(imgUrl);
     // TEST =================TODO========================
     await client.query(
       `
       INSERT INTO NewRequest (IssueDescription, Title, Category,  EstimatedCost, Image, RequestID)
-      VALUES ($1, $2, $3, $4, $5);
+      VALUES ($1, $2, $3, $4, $5, $6);
     `,
       [Description, Title, Category, estimatedCost, imgUrl, requestID]
     );
-
+      
     res.status(201).json({ message: "Request submitted" });
+
   } catch (error) {
     console.error("Error executing query", error.stack);
     res.status(500).json({ error: "Internal server error" });
@@ -411,6 +422,7 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
 
 //=============================/customers/getFeedback========================================
 // /customers/getFeedback
+//Tested
 export const customerGetFeedback = async (req, res) => {
   //// Get one feedback based on the service ID and customer ID
   const { serviceId } = req.params;
