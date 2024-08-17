@@ -198,3 +198,39 @@ export const GetAssignedRequests = async (req, res) => {
   
 };
   
+  //=============================/technician/send-report========================================
+  // /technician/send-report
+  //Tested
+  export const SendReport= async (req, res)=>{
+    //Spares is an array of objects {spareId, quantity}
+    const {RequestId, Comment, Spares} = req.body;
+
+    if(!RequestId || !Comment)
+      return res.status(400).json({ error: "Invalid input" });
+
+    try {
+      const result = await client.query(
+          `INSERT INTO Report (RequestId, Comment) VALUES ($1, $2) RETURNING Report.Id;`
+          , [RequestId, Comment]
+      );
+      const {id}= result.rows[0];
+      if(Spares.length !== 0)
+      {
+        for (const { spareId, quantity } of Spares) {
+          await client.query(
+            `INSERT INTO ReportDetails (ReportId, SpareId, Quantity) VALUES ($1, $2, $3) ;`,
+            [id, spareId, quantity]
+          );
+          await client.query(
+            `UPDATE Spares SET Quantity = Quantity - $1 WHERE Id = $2  ;`,
+            [quantity, spareId]
+          );
+      }
+    }
+    res.json({ message: 'Report Sent Successfully'});
+  } catch (err) {
+      console.error("Send report error:", err);
+      res.status(500).json({ error: "Failed to send report" });
+  }
+  };
+
