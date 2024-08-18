@@ -357,9 +357,18 @@ export const reorderSpares = async (req, res) => {
 // /admin/services/add
 //Tested
 export const addService = async (req, res) => {
-    const { customerId, title, category, image, issueDescription, actualcost, maintenanceTime, isCommon } = req.body;
+    const { customerId, title, category, issueDescription, actualcost, maintenanceTime, isCommon } = req.body;
+    let imgUrl;
+    if (req.file !== undefined) {
+      // Variable is undefined
+      const filename = req.file.filename;
+      console.log(filename);
+      imgUrl = `${process.env.SERVER_URL}/image/${filename}`;
+    }
+    
     const sql = `INSERT INTO Service (customerId, title, category, actualcost, maintenanceTime, image, isCommon, issueDescription) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id;`;
-    const values = [customerId, title, category, actualcost, maintenanceTime, image, isCommon, issueDescription];
+    
+    const values = [customerId, title, category, actualcost, maintenanceTime, imgUrl, isCommon, issueDescription];
 
     try {
         const fetchCustomer = await client.query(`SELECT * FROM Customer WHERE userid = $1`, [customerId]);
@@ -382,7 +391,14 @@ export const addService = async (req, res) => {
 // /admin/services/update
 //Tested
 export const updateService = async (req, res) => {
-    const {id, title, category, image, issueDescription, actualcost, maintenanceTime, isCommon } = req.body;
+    const {id, title, category, issueDescription, actualcost, maintenanceTime, isCommon } = req.body;
+    let imgUrl;
+    if (req.file !== undefined) {
+      // Variable is undefined
+      const filename = req.file.filename;
+      console.log(filename);
+      imgUrl = `${process.env.SERVER_URL}/image/${filename}`;
+    }
     const sql = `
         UPDATE service
         SET title = $1, category = $2, actualcost = $3, maintenanceTime = $4, image = $5, isCommon = $6, issueDescription = $7 
@@ -390,7 +406,7 @@ export const updateService = async (req, res) => {
         RETURNING *;
     `;
 
-    const values = [title, category, actualcost, maintenanceTime, image, isCommon, issueDescription, id];
+    const values = [title, category, actualcost, maintenanceTime, imgUrl, isCommon, issueDescription, id];
     try {
         const result = await client.query(sql, values);
 

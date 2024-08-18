@@ -1,6 +1,7 @@
 import express from 'express';
 import * as adminController from '../controllers/adminController.js';
 import { verifyToken } from '../middlewares/authMiddleware.js';
+import { upload } from "../config/upload.js";
 
 const router = express.Router();
 
@@ -25,8 +26,8 @@ router.delete('/spares/delete/:id', verifyToken, adminController.deleteSpare);
 router.get('/spares/getAll', verifyToken, adminController.getAllSpares);
 router.post('/spares/:id/reorder', verifyToken, adminController.reorderSpares);
 
-router.post('/services/add', verifyToken, adminController.addService);
-router.put('/services/update', verifyToken, adminController.updateService);
+router.post('/services/add', verifyToken, upload.single("image"), adminController.addService);
+router.put('/services/update', verifyToken, upload.single("image"), adminController.updateService);
 router.delete('/services/delete/:id', verifyToken, adminController.deleteService);
 router.get('/services/usageRate', verifyToken, adminController.getServicesUsage);
 router.get('/services/getRatings', verifyToken, adminController.getServicesRatings);
