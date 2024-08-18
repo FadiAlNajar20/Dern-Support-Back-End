@@ -292,6 +292,15 @@ export const customerSendServiceRequest = async (req, res) => {
       [ServiceID, requestID]
     );
 
+    //USAGE TIME
+    await client.query(
+      `
+      UPDATE Service
+      SET UsageTime = UsageTime + 1
+      WHERE ServiceID = $1;
+    `,
+      [ServiceID]
+    );
     await client.query("COMMIT"); //FROM Tabnine Ai
 
     res.status(201).json({ message: "Service requested" });
