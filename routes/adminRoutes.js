@@ -1,37 +1,39 @@
 import express from 'express';
-import {
-    login,
-    logout,
-    updateSupportRequestStatus,
-    getAllRequests,
-    getAllFeedback,
-    getAllFeedbackRelatedToService,
-    getAVGForAllFeedbackRelatedToService,
-    addArticle, 
-    updateArticle,
-    deleteArticle,
-    getAllSpares,
-    reorderSpares,
-    addService,
-    createTechnicianAccount
-} from '../controllers/adminController.js';
+import * as adminController from '../controllers/adminController.js';
 import { verifyToken } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.post('/login', login);
-router.post('/logout', verifyToken, logout);
-router.put('/support-requests/update', verifyToken, updateSupportRequestStatus);
-router.get('/support-requests/getAll', verifyToken, getAllRequests);
-router.get('/feedback/getAll', verifyToken, getAllFeedback);
-router.get('/feedback/relatedToService/:id', verifyToken, getAllFeedbackRelatedToService);
-router.get('/feedback/relatedToService/avg/:id', verifyToken, getAVGForAllFeedbackRelatedToService);
-router.post('/articles/add', verifyToken, addArticle);
-router.put('/articles/update', verifyToken, updateArticle);
-router.delete('/articles/delete/:id', verifyToken, deleteArticle);
-router.get('/spares/getAll', verifyToken, getAllSpares);
-router.post('/spares/:id/reorder', verifyToken, reorderSpares);
-router.post('/services/add', verifyToken, addService);
-router.post('/technicians/createAccount', verifyToken, createTechnicianAccount);
+router.post('/login', adminController.login);
+router.post('/logout', verifyToken, adminController.logout);
+
+router.put('/support-requests/update', verifyToken, adminController.updateSupportRequestStatus);
+router.get('/support-requests/getAll', verifyToken, adminController.getAllRequests);
+router.get('/support-requests/requestsPerDay', verifyToken, adminController.getRequestsPerDay);
+
+router.get('/feedback/getAll', verifyToken, adminController.getAllFeedback);
+router.get('/feedback/relatedToService/:id', verifyToken, adminController.getAllFeedbackRelatedToService);
+router.get('/feedback/relatedToService/avg/:id', verifyToken, adminController.getAVGForAllFeedbackRelatedToService);
+
+router.post('/articles/add', verifyToken, adminController.addArticle);
+router.put('/articles/update', verifyToken, adminController.updateArticle);
+router.delete('/articles/delete/:id', verifyToken, adminController.deleteArticle);
+
+router.post('/spares/add', verifyToken, adminController.addSpare);
+router.put('/spares/update', verifyToken, adminController.updateSpare);
+router.delete('/spares/delete/:id', verifyToken, adminController.deleteSpare);
+router.get('/spares/getAll', verifyToken, adminController.getAllSpares);
+router.post('/spares/:id/reorder', verifyToken, adminController.reorderSpares);
+
+router.post('/services/add', verifyToken, adminController.addService);
+router.put('/services/update', verifyToken, adminController.updateService);
+router.delete('/services/delete/:id', verifyToken, adminController.deleteService);
+router.get('/services/usageRate', verifyToken, adminController.getServicesUsage);
+router.get('/services/getRatings', verifyToken, adminController.getServicesRatings);
+router.get('/services/servicesPerDay', verifyToken, adminController.getServicesPerDay);
+
+router.post('/technicians/createAccount', verifyToken, adminController.createTechnicianAccount);
+
+router.get('/reports/request/:id', verifyToken, adminController.getReportForRequest);
 
 export default router;
