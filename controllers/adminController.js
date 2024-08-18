@@ -325,7 +325,7 @@ export const deleteSpare = async (req, res) => {
 // /admin/spares/getAll
 //Tested
 export const getAllSpares = async (req, res) => {
-    const sql = `SELECT * FROM Spares;`;
+    const sql = `SELECT * FROM Spares ORDER BY quantity;`;
 
     try {
         const result = await client.query(sql);
@@ -561,16 +561,25 @@ export const getReportForRequest = async (req, res) => {
     const { id } = req.params; 
 
     const sql = `
-        SELECT r.comment, rd.quantity, s.name AS spareName
-        FROM report r
-        JOIN reportDetails rd ON r.id = rd.reportId
-        JOIN spares s ON rd.spareId = s.id
-        WHERE r.requestId = $1;
+          SELECT 
+            r.comment,
+            rd.quantity,
+            s.name AS spareName
+        FROM 
+            Report r
+        JOIN 
+            ReportDetails rd ON r.id = rd.reportid
+        JOIN 
+            Spares s ON rd.spareid = s.id
+        WHERE 
+            r.requestId = $1;
     `;
 
     try {
         const result = await client.query(sql, [id]);
-
+// Print or log the SQL query and parameter for debugging
+console.log('SQL Query:', sql);
+console.log('Parameter:', id);
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'No report found for this request' });
         }
