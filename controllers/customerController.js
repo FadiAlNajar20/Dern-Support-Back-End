@@ -1,7 +1,7 @@
 import { client } from "../server.js";
 import bcrypt from "bcrypt";
 import { io } from "../server.js";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 import sgMail from "@sendgrid/mail";
 import { verifyTokenEmail } from "../middlewares/authMiddleware.js";
@@ -9,7 +9,6 @@ import {
   assignTechnician,
   generateEstimates,
 } from "../helper/helperMethods.js";
-
 
 export const testIo = async (req, res) => {
   console.log("Request received");
@@ -21,13 +20,13 @@ export const testIo = async (req, res) => {
   const notificationId = uuidv4();
 
   io.emit("newRequest", {
-    id: notificationId, 
-    message: "Your order has been successfully scheduled. Go to the information page to see the status of your order",
+    id: notificationId,
+    message:
+      "Your order has been successfully scheduled. Go to the information page to see the status of your order",
   });
 
   res.status(200).json("done");
 };
-
 
 //Not route
 // generate a token
@@ -43,11 +42,21 @@ const sendEmail = async (Email, token) => {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
   const msg = {
     to: Email,
-    from: "hasankarraz7@gmail.com",
+    from: {
+      name: "Dern Support",
+      email: "hasankarraz7@gmail.com",
+    },
     subject: "Verify your email",
-    name: "Dern Support",
-    html: `<p>Thank you for signing up. Please verify your email by clicking the link below:</p>
-           <b><a href="${verificationLink}">Verify Email</a></b>`,
+    html: `
+    <b><p style="font-size: 14px;">Thank you for signing up. Please verify your email by clicking the link below:</p></b>
+<center>
+  <b>
+    <a href="${verificationLink}" style="font-size: 18px; text-decoration: none; display: inline-block; margin: 0 auto;">
+      Verify Email
+    </a>
+  </b>
+</center>
+    `,
   };
 
   try {
@@ -385,7 +394,7 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
       RETURNING id;
     `,
       [CustomerID, technicianId, DeviceDeliveryMethod, estimatedCompletionTime]
-     // [CustomerID, technicianId, DeviceDeliveryMethod, 2]
+      // [CustomerID, technicianId, DeviceDeliveryMethod, 2]
     );
 
     const requestID = requestResult.rows[0].id;
@@ -401,7 +410,7 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
       console.log(filename);
       imgUrl = `${process.env.SERVER_URL}/image/${filename}`;
     }
-    
+
     console.log(imgUrl);
     // TEST =================TODO========================
     await client.query(
