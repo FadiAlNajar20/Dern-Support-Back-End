@@ -24,7 +24,6 @@ router.delete('/articles/delete/:id', verifyToken, adminController.deleteArticle
 router.post('/spares/add', verifyToken, adminController.addSpare);
 router.put('/spares/update', verifyToken, adminController.updateSpare);
 router.delete('/spares/delete/:id', verifyToken, adminController.deleteSpare);
-router.get('/spares/getAll', verifyToken, adminController.getAllSpares);
 router.post('/spares/:id/reorder', verifyToken, adminController.reorderSpares);
 
 router.post('/services/add', verifyToken, upload.single("image"), adminController.addService);

@@ -343,21 +343,6 @@ export const deleteSpare = async (req, res) => {
     }
 };
 
-//=============================/admin/spares/getAll========================================
-// /admin/spares/getAll
-//Tested
-export const getAllSpares = async (req, res) => {
-    const sql = `SELECT * FROM Spares ORDER BY quantity;`;
-
-    try {
-        const result = await client.query(sql);
-        res.json(result.rows);
-    } catch (err) {
-        console.error("View spares error:", err);
-        res.status(500).json({ error: "Failed to fetch spares" });
-    }
-};
-
 //=============================/admin/spares/:id/reorder========================================
 // /admin/spares/:id/reorder
 //Tested
