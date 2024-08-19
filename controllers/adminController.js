@@ -61,6 +61,28 @@ export const updateSupportRequestStatus = async (req, res) => {
     }
 };
 
+//=============================/admin/support-requests-timeAndCost/update========================================
+// /admin/support-requests-timeAndCost/update
+//Tested
+export const updateSupportRequestTimeAndCost = async (req, res) => {
+    const { id, maintenanceTime, actualcost } = req.body;
+    const sql = `UPDATE newrequest SET maintenanceTime = $1, actualcost = $2  WHERE id = $3 RETURNING *;`;
+    const values = [maintenanceTime, actualcost, id];
+
+    try {
+
+        const result = await client.query(sql, values);
+        console.log("  Result", result)
+        if (result.rowCount > 0)
+            res.json({ message: 'Support request updated', request: result.rows[0] });
+        else
+            res.json({ message: 'Something went wrong' });
+    } catch (err) {
+        console.error("Update support request error:", err);
+        res.status(500).json({ error: "Failed to update request" });
+    }
+};
+
 //=============================/admin/support-requests/getAll========================================
 // /admin/support-requests/getAll
 //Tested

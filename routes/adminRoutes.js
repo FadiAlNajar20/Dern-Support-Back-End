@@ -9,6 +9,7 @@ router.post('/login', adminController.login);
 router.post('/logout', verifyToken, adminController.logout);
 
 router.put('/support-requests/update', verifyToken, adminController.updateSupportRequestStatus);
+router.put('/support-requests-timeAndCost/update', verifyToken, adminController.updateSupportRequestTimeAndCost);
 router.get('/support-requests/getAll', verifyToken, adminController.getAllRequests);
 router.get('/support-requests/requestsPerDay', verifyToken, adminController.getRequestsPerDay);
 
