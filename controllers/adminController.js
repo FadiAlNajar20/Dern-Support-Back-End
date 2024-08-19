@@ -61,6 +61,28 @@ export const updateSupportRequestStatus = async (req, res) => {
     }
 };
 
+//=============================/admin/support-requests-timeAndCost/update========================================
+// /admin/support-requests-timeAndCost/update
+//Tested
+export const updateSupportRequestTimeAndCost = async (req, res) => {
+    const { id, maintenanceTime, actualcost } = req.body;
+    const sql = `UPDATE newrequest SET maintenanceTime = $1, actualcost = $2  WHERE id = $3 RETURNING *;`;
+    const values = [maintenanceTime, actualcost, id];
+
+    try {
+
+        const result = await client.query(sql, values);
+        console.log("  Result", result)
+        if (result.rowCount > 0)
+            res.json({ message: 'Support request updated', request: result.rows[0] });
+        else
+            res.json({ message: 'Something went wrong' });
+    } catch (err) {
+        console.error("Update support request error:", err);
+        res.status(500).json({ error: "Failed to update request" });
+    }
+};
+
 //=============================/admin/support-requests/getAll========================================
 // /admin/support-requests/getAll
 //Tested
@@ -239,16 +261,16 @@ export const deleteArticle = async (req, res) => {
 // /admin/spares/add
 //Tested
 export const addSpare = async (req, res) => {
-    const { name, quantity, reorderThreshold } = req.body;
+    const { name, quantity, reorderThreshold, price } = req.body;
 
     const sql = `
-        INSERT INTO spares (name, quantity, reorderthreshold)
-        VALUES ($1, $2, $3)
+        INSERT INTO spares (name, quantity, reorderthreshold, price)
+        VALUES ($1, $2, $3, $4)
         RETURNING *;
     `;
 
     try {
-        const result = await client.query(sql, [name, quantity, reorderThreshold]);
+        const result = await client.query(sql, [name, quantity, reorderThreshold, price]);
         if(result.rowCount > 0)
         res.json({
             message: 'Spare added successfully',
@@ -266,17 +288,17 @@ export const addSpare = async (req, res) => {
 // /admin/spares/update
 //Tested
 export const updateSpare = async (req, res) => {
-    const { id, name, quantity, reorderThreshold } = req.body;
+    const { id, name, quantity, reorderThreshold, price } = req.body;
 
     const sql = `
         UPDATE spares
-        SET name = $1, quantity = $2, reorderthreshold = $3
-        WHERE id = $4
+        SET name = $1, quantity = $2, reorderthreshold = $3, price = $4
+        WHERE id = $5
         RETURNING *;
     `;
 
     try {
-        const result = await client.query(sql, [name, quantity, reorderThreshold, id]);
+        const result = await client.query(sql, [name, quantity, reorderThreshold, price, id]);
 
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Spare not found' });
@@ -318,21 +340,6 @@ export const deleteSpare = async (req, res) => {
     } catch (err) {
         console.error("Error deleting spare:", err);
         res.status(500).json({ message: 'Failed to delete spare' });
-    }
-};
-
-//=============================/admin/spares/getAll========================================
-// /admin/spares/getAll
-//Tested
-export const getAllSpares = async (req, res) => {
-    const sql = `SELECT * FROM Spares ORDER BY quantity;`;
-
-    try {
-        const result = await client.query(sql);
-        res.json(result.rows);
-    } catch (err) {
-        console.error("View spares error:", err);
-        res.status(500).json({ error: "Failed to fetch spares" });
     }
 };
 

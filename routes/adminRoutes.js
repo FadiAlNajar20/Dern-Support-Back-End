@@ -9,6 +9,7 @@ router.post('/login', adminController.login);
 router.post('/logout', verifyToken, adminController.logout);
 
 router.put('/support-requests/update', verifyToken, adminController.updateSupportRequestStatus);
+router.put('/support-requests-timeAndCost/update', verifyToken, adminController.updateSupportRequestTimeAndCost);
 router.get('/support-requests/getAll', verifyToken, adminController.getAllRequests);
 router.get('/support-requests/requestsPerDay', verifyToken, adminController.getRequestsPerDay);
 
@@ -23,7 +24,6 @@ router.delete('/articles/delete/:id', verifyToken, adminController.deleteArticle
 router.post('/spares/add', verifyToken, adminController.addSpare);
 router.put('/spares/update', verifyToken, adminController.updateSpare);
 router.delete('/spares/delete/:id', verifyToken, adminController.deleteSpare);
-router.get('/spares/getAll', verifyToken, adminController.getAllSpares);
 router.post('/spares/:id/reorder', verifyToken, adminController.reorderSpares);
 
 router.post('/services/add', verifyToken, upload.single("image"), adminController.addService);
