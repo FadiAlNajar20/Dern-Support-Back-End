@@ -239,16 +239,16 @@ export const deleteArticle = async (req, res) => {
 // /admin/spares/add
 //Tested
 export const addSpare = async (req, res) => {
-    const { name, quantity, reorderThreshold } = req.body;
+    const { name, quantity, reorderThreshold, price } = req.body;
 
     const sql = `
-        INSERT INTO spares (name, quantity, reorderthreshold)
-        VALUES ($1, $2, $3)
+        INSERT INTO spares (name, quantity, reorderthreshold, price)
+        VALUES ($1, $2, $3, $4)
         RETURNING *;
     `;
 
     try {
-        const result = await client.query(sql, [name, quantity, reorderThreshold]);
+        const result = await client.query(sql, [name, quantity, reorderThreshold, price]);
         if(result.rowCount > 0)
         res.json({
             message: 'Spare added successfully',
@@ -266,17 +266,17 @@ export const addSpare = async (req, res) => {
 // /admin/spares/update
 //Tested
 export const updateSpare = async (req, res) => {
-    const { id, name, quantity, reorderThreshold } = req.body;
+    const { id, name, quantity, reorderThreshold, price } = req.body;
 
     const sql = `
         UPDATE spares
-        SET name = $1, quantity = $2, reorderthreshold = $3
-        WHERE id = $4
+        SET name = $1, quantity = $2, reorderthreshold = $3, price = $4
+        WHERE id = $5
         RETURNING *;
     `;
 
     try {
-        const result = await client.query(sql, [name, quantity, reorderThreshold, id]);
+        const result = await client.query(sql, [name, quantity, reorderThreshold, price, id]);
 
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Spare not found' });
