@@ -370,7 +370,7 @@ export const addService = async (req, res) => {
       // Variable is undefined
       const filename = req.file.filename;
       console.log(filename);
-      imgUrl = `${process.env.SERVER_URL}/image/${filename}`;
+      imgUrl = `${filename}`;
     }
     
     const sql = `INSERT INTO Service (customerId, title, category, actualcost, maintenanceTime, image, isCommon, issueDescription) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id;`;
@@ -404,7 +404,7 @@ export const updateService = async (req, res) => {
       // Variable is undefined
       const filename = req.file.filename;
       console.log(filename);
-      imgUrl = `${process.env.SERVER_URL}/image/${filename}`;
+      imgUrl = `${filename}`;
     }
     const sql = `
         UPDATE service
