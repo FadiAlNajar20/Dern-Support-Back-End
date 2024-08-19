@@ -83,11 +83,10 @@ export const customerVerifyEmail = async (req, res) => {
     ]);
 
     res.redirect(302, 'http://localhost:5173/verify-email');
-    res.status(200).json({
-      success: true,
-      message: "Email verified successfully.",
-    });
-    consol
+    // res.status(200).json({
+    //   success: true,
+    //   message: "Email verified successfully.",
+    // });
   } catch (error) {
     console.error("Error verifying email", error.stack);
     res.status(500).json({ error: "Internal server error" });
@@ -417,7 +416,7 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
       // Variable is undefined
       const filename = req.file.filename;
       console.log(filename);
-      imgUrl = `${process.env.SERVER_URL}/image/${filename}`;
+      imgUrl = `${filename}`;
     }
 
     console.log(imgUrl);
