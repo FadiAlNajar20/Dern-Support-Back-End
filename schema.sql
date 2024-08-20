@@ -1,102 +1,120 @@
--- Table: "User"
 CREATE TABLE "User" (
-    ID serial PRIMARY KEY,
-    Name varchar(255) NOT NULL,
-    Email varchar(255) UNIQUE NOT NULL,
-    Password varchar(255) NOT NULL,
-    PhoneNumber varchar(20),
-    IsVerified boolean DEFAULT FALSE
+    ID SERIAL PRIMARY KEY,
+    Name VARCHAR NOT NULL,
+    Email VARCHAR NOT NULL,
+    Password VARCHAR NOT NULL,
+    PhoneNumber VARCHAR,
+    IsVerified BOOLEAN DEFAULT FALSE
 );
 
--- Table: Admin
 CREATE TABLE Admin (
-    ID serial PRIMARY KEY,
-    UserID int REFERENCES "User"(ID) ON DELETE CASCADE
+    ID SERIAL PRIMARY KEY,
+    UserID INT NOT NULL,
+    FOREIGN KEY (UserID) REFERENCES "User"(ID) ON DELETE CASCADE
 );
 
--- Table: Technician
 CREATE TABLE Technician (
-    ID serial PRIMARY KEY,
-    UserID int REFERENCES "User"(ID) ON DELETE CASCADE,
-    Specialization varchar(255),
-    Availability timestamp
+    ID SERIAL PRIMARY KEY,
+    UserID INT NOT NULL,
+    Specialization VARCHAR,
+    Availability TIMESTAMP,
+    FOREIGN KEY (UserID) REFERENCES "User"(ID) ON DELETE CASCADE
 );
 
--- Table: Customer
 CREATE TABLE Customer (
-    ID serial PRIMARY KEY,
-    UserID int REFERENCES "User"(ID) ON DELETE CASCADE,
-    AccountType varchar(50)
+    ID SERIAL PRIMARY KEY,
+    UserID INT NOT NULL,
+    AccountType VARCHAR,
+    FOREIGN KEY (UserID) REFERENCES "User"(ID) ON DELETE CASCADE
 );
 
--- Table: Spares
-CREATE TABLE Spares (
-    ID serial PRIMARY KEY,
-    Name varchar(255) NOT NULL,
-    Quantity int NOT NULL,
-    ReorderThreshold int NOT NULL
-);
-
--- Table: Request
 CREATE TABLE Request (
-    ID serial PRIMARY KEY,
-    CustomerID int REFERENCES Customer(ID) ON DELETE SET NULL,
-    TechnicianID int REFERENCES Technician(ID) ON DELETE SET NULL,
-    Status varchar(50) NOT NULL,
-    DeviceDeliveryMethod varchar(255),
-    CreatedDate timestamp DEFAULT CURRENT_TIMESTAMP,
-    EstimatedTime int,
-    ActualTime_deadline timestamp,
-    RequestType varchar(255)
+    ID SERIAL PRIMARY KEY,
+    CustomerID INT NOT NULL,
+    TechnicianID INT NOT NULL,
+    Status VARCHAR NOT NULL DEFAULT 'Pending',
+    DeviceDeliveryMethod VARCHAR,
+    CreatedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    EstimatedTime TIMESTAMP,
+    ActualTime TIMESTAMP,
+    RequestType VARCHAR,
+    FOREIGN KEY (CustomerID) REFERENCES Customer(ID) ON DELETE CASCADE,
+    FOREIGN KEY (TechnicianID) REFERENCES Technician(ID) ON DELETE CASCADE
 );
 
--- Table: NewRequest
 CREATE TABLE NewRequest (
-    ID serial PRIMARY KEY,
-    IssueDescription varchar(255),
-    Title varchar(255),
-    Category varchar(255),
-    EstimatedCost decimal(10, 2),
-    ActualCost decimal(10, 2),
-    MaintenanceTime int,
-    Image varchar(255),
-    RequestID int REFERENCES Request(ID) ON DELETE CASCADE
+    ID SERIAL PRIMARY KEY,
+    IssueDescription VARCHAR NOT NULL,
+    Title VARCHAR NOT NULL,
+    Category VARCHAR NOT NULL,
+    EstimatedCost DECIMAL (10, 2),
+    ActualCost DECIMAL (10, 2),
+    MaintenanceTime INT,
+    Image VARCHAR,
+    RequestID INT NOT NULL,
+    FOREIGN KEY (RequestID) REFERENCES Request(ID) ON DELETE CASCADE
 );
 
--- Table: Service
 CREATE TABLE Service (
-    ID serial PRIMARY KEY,
-    CustomerID int REFERENCES Customer(ID) ON DELETE SET NULL,
-    Title varchar(255),
-    Category varchar(255),
-    ActualCost decimal(10, 2),
-    MaintenanceTime int,
-    Image varchar(255),
-    IsCommon boolean DEFAULT FALSE,
-    IssueDescription varchar(255)
+    ID SERIAL PRIMARY KEY,
+    CustomerID INT NOT NULL,
+    Title VARCHAR,
+    Category VARCHAR,
+    ActualCost DECIMAL (10, 2),
+    MaintenanceTime INT,
+    Image VARCHAR,
+    IssueDescription VARCHAR,
+    CreatedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UsageTime INT DEFAULT 0,
+    IsCommon BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (CustomerID) REFERENCES Customer(ID) ON DELETE CASCADE
 );
 
--- Table: ServiceRequest
 CREATE TABLE ServiceRequest (
-    ID serial PRIMARY KEY,
-    ServiceID int REFERENCES Service(ID) ON DELETE CASCADE,
-    RequestID int REFERENCES Request(ID) ON DELETE CASCADE
+    ID SERIAL PRIMARY KEY,
+    ServiceID INT NOT NULL,
+    RequestID INT NOT NULL,
+    FOREIGN KEY (ServiceID) REFERENCES Service(ID) ON DELETE CASCADE,
+    FOREIGN KEY (RequestID) REFERENCES Request(ID) ON DELETE CASCADE
 );
 
--- Table: Feedback
 CREATE TABLE Feedback (
-    ID serial PRIMARY KEY,
-    CustomerID int REFERENCES Customer(ID) ON DELETE SET NULL,
-    ServiceID int REFERENCES Service(ID) ON DELETE SET NULL,
-    Rating int NOT NULL,
-    Comment varchar(255)
+    ID SERIAL PRIMARY KEY,
+    CustomerID INT NOT NULL,
+    ServiceID INT NOT NULL,
+    Rating INT,
+    Comment VARCHAR,
+    FOREIGN KEY (CustomerID) REFERENCES Customer(ID) ON DELETE CASCADE,
+    FOREIGN KEY (ServiceID) REFERENCES Service(ID) ON DELETE CASCADE
 );
 
--- Table: Article
 CREATE TABLE Article (
-    ID serial PRIMARY KEY,
-    Title varchar(255) NOT NULL,
-    Image varchar(255),
-    Description varchar(255),
-    CreatedDate timestamp DEFAULT CURRENT_TIMESTAMP
+    ID SERIAL PRIMARY KEY,
+    Title VARCHAR,
+    Image VARCHAR,
+    Description VARCHAR,
+    CreatedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Report (
+    ID SERIAL PRIMARY KEY,
+    RequestID INT NOT NULL,
+    Comment VARCHAR,
+    FOREIGN KEY (RequestID) REFERENCES Request(ID) ON DELETE CASCADE
+);
+
+CREATE TABLE Spares (
+    Name VARCHAR PRIMARY KEY,
+    Quantity INT,
+    ReorderThreshold INT DEFAULT 20,
+    Price DECIMAL(10, 2)
+);
+
+CREATE TABLE ReportDetails (
+    ID SERIAL PRIMARY KEY,
+    ReportID INT NOT NULL,
+    SpareID VARCHAR NOT NULL,
+    Quantity INT  DEFAULT 1,
+    FOREIGN KEY (ReportID) REFERENCES Report(ID) ON DELETE CASCADE,
+    FOREIGN KEY (SpareID) REFERENCES Spares(Name) ON DELETE CASCADE
 );
