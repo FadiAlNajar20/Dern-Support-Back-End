@@ -27,7 +27,7 @@ router.put('/articles/update', verifyToken, updateArticle);
 router.delete('/articles/delete/:id', verifyToken, deleteArticle);
 router.get('/spares/getAll', verifyToken, getAllSpares);
 router.post('/spares/:id/reorder', verifyToken, reorderSpares);
-router.post('/services/add', verifyToken, addService);
+router.post('/servicesadd/', verifyToken, addService);
 router.post('/technicians/createAccount', verifyToken, createTechnicianAccount);
 
 export default router;

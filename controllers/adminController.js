@@ -184,6 +184,7 @@ export const addService = async (req, res) => {
 // /admin/technicians/createAccount
 export const createTechnicianAccount = async (req, res) => {
     const { Name, Email, Password, PhoneNo, Specialization } = req.body;
+    
     const hashedPassword = bcrypt.hashSync(Password, 10);
     const sql = `INSERT INTO technicians (Name, Email, Password, PhoneNumber, Specialization) VALUES ($1, $2, $3, $4, $5) RETURNING id;`;
     const values = [Name, Email, hashedPassword, PhoneNo, Specialization];

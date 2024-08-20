@@ -9,7 +9,7 @@ import {
   assignTechnician,
   generateEstimates,
 } from "../helper/helperMethods.js";
-
+const notificationId = uuidv4();
 
 export const testIo = async (req, res) => {
   console.log("Request received");
@@ -74,10 +74,6 @@ export const customerVerifyEmail = async (req, res) => {
     ]);
 
     res.redirect(302, 'http://localhost:5173/verify-email');
-    res.status(200).json({
-      success: true,
-      message: "Email verified successfully.",
-    });
     consol
   } catch (error) {
     console.error("Error verifying email", error.stack);
@@ -150,6 +146,7 @@ export const customerSignup = async (req, res) => {
 // Tested
 export const customerLogin = async (req, res) => {
   const { Email, Password } = req.body;
+
 
   //all field required
   if (!Email || !Password) {
@@ -237,6 +234,7 @@ export const customerGetEstimatedTimeAndCost = async (req, res) => {
 //Tested
 export const customerSendServiceRequest = async (req, res) => {
   const CustomerID = req.userId; //form authMiddleware
+  
   //console.log(CustomerID);
   const { ServiceID, Method } = req.body;
 
@@ -299,6 +297,7 @@ export const customerSendServiceRequest = async (req, res) => {
 export const customerSendFeedback = async (req, res) => {
   const CustomerID = req.userId; //form authMiddleware
 
+
   const { ServiceID, Rating, Comment } = req.body;
 
   //all field required
@@ -352,8 +351,10 @@ export const customerGetAllRequests = async (req, res) => {
 // /customers/final-approval-support-request
 //Tested
 export const customerSenApprovedSupportRequest = async (req, res) => {
+  
   console.log(req.body);
   const CustomerID = req.userId;
+ 
   console.log(CustomerID);
   const { Description, DeviceDeliveryMethod, Title, Category } = req.body;
   // TODO: CALL assign function From L
@@ -411,6 +412,11 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
     `,
       [Description, Title, Category, estimatedCost, imgUrl, requestID]
     );
+
+    io.emit("newRequest", {
+      id: notificationId,
+      message: "Your order has been successfully scheduled. Go to the information page to see the status of your order",
+    });
       
     res.status(201).json({ message: "Request submitted" });
 
