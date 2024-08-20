@@ -8,8 +8,8 @@ import { verifyToken } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.get('/services/getAll', verifyToken, getAllServices);
-router.get('/articles/getAll', verifyToken, getAllArticles);
+router.get('/services/getAll', getAllServices);
+router.get('/articles/getAll', getAllArticles);
 router.get('/spares/getAll', verifyToken, getAllSpares);
 
 
