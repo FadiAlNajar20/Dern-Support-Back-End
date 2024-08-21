@@ -3,6 +3,23 @@ import jwt from "jsonwebtoken";
 import { client } from "../server.js";
 import bcrypt from "bcrypt";
 
+
+
+
+//================================/admin/user/:id ====================================
+export const getUser = async(req,res)=>{
+    const id = req.params.id;
+    const sql = 'SELECT email,name FROM "User" WHERE ID=$1;'
+    
+    try {
+        const result = await client.query(sql, [id]);
+        res.json(result.rows);
+      } catch (err) {
+        console.error("Get user by Id error:", err);
+        res.status(500).json({ error: "Failed to fetch user by Id " });
+      }
+}
+
 //=============================/admin/login========================================
 // /admin/login
 //Tested

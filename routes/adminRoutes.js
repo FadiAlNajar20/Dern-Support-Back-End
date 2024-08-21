@@ -33,6 +33,8 @@ router.get('/services/usageRate', verifyToken, adminController.getServicesUsage)
 router.get('/services/getRatings', verifyToken, adminController.getServicesRatings);
 router.get('/services/servicesPerDay', verifyToken, adminController.getServicesPerDay);
 
+router.get('/users/:id',verifyToken,adminController.getUser);
+
 router.post('/technicians/createAccount', verifyToken, adminController.createTechnicianAccount);
 
 router.get('/reports/request/:id', verifyToken, adminController.getReportForRequest);

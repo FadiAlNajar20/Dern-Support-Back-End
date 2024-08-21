@@ -4,7 +4,6 @@ import {
     getAllArticles,
     getAllSpares,
     getServicesById
-    
 } from '../controllers/commonController.js';
 import { verifyToken } from '../middlewares/authMiddleware.js';
 
