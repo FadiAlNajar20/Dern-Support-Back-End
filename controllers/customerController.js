@@ -39,7 +39,7 @@ const generateToken = (id) => {
 //Not route
 // Sending email to customer account to verify his email
 const sendEmail = async (Email, token) => {
-  const verificationLink = `http://localhost:3005/customers/verify-email?token=${token}`;
+  const verificationLink = `http://localhost:${process.env.PORT}/customers/verify-email?token=${token}`;
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
   const msg = {
     to: Email,
