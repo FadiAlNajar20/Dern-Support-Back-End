@@ -147,7 +147,7 @@ export const getAllFeedbackRelatedToService = async (req, res) => {
 
   try {
     const result = await client.query(sql, [serviceId]);
-    if (rowCount > 0) res.json(result.rows);
+    if (result.rowCount > 0) res.json(result.rows);
     else
       res
         .status(404)
