@@ -261,7 +261,7 @@ export const deleteArticle = async (req, res) => {
 // /admin/spares/add
 //Tested
 export const addSpare = async (req, res) => {
-    const { name, quantity, reorderThreshold, price } = req.body;
+    const { name, quantity, reorderthreshold, price } = req.body;
 
     const sql = `
         INSERT INTO spares (name, quantity, reorderthreshold, price)
@@ -270,7 +270,7 @@ export const addSpare = async (req, res) => {
     `;
 
     try {
-        const result = await client.query(sql, [name, quantity, reorderThreshold, price]);
+        const result = await client.query(sql, [name, quantity, reorderthreshold, price]);
         if(result.rowCount > 0)
         res.json({
             message: 'Spare added successfully',
