@@ -565,35 +565,30 @@ export const createTechnicianAccount = async (req, res) => {
 // /admin/reports/request/:id
 //Tested
 export const getReportForRequest = async (req, res) => {
-    const { id } = req.params; 
+    const requestId = req.params.id; 
 
-    const sql = `
-          SELECT 
-            r.comment,
-            rd.quantity,
-            s.name AS spareName
-        FROM 
-            Report r
-        JOIN 
-            ReportDetails rd ON r.id = rd.reportid
-        JOIN 
-            Spares s ON rd.spareid = s.id
-        WHERE 
-            r.requestId = $1;
-    `;
+    const getCommentSQL = `SELECT id, comment FROM Report WHERE requestId = $1; `;
 
     try {
-        const result = await client.query(sql, [id]);
-// Print or log the SQL query and parameter for debugging
-console.log('SQL Query:', sql);
-console.log('Parameter:', id);
-        if (result.rows.length === 0) {
+        const reportResult = await client.query(getCommentSQL, [requestId]);
+        if (reportResult.rows.length === 0) {
             return res.status(404).json({ message: 'No report found for this request' });
         }
+        
+        const {id, comment} = reportResult.rows[0];
+        
+     const getSpareInfoSQL = `SELECT r.quantity, s.name FROM ReportDetails r JOIN Spares s ON r.spareId = s.id  WHERE reportId = $1; `;
+     const sparesResult = await client.query(getSpareInfoSQL, [id]);
 
+    if (sparesResult.rows.length === 0) {
+        return res.status(404).json({ message: 'No Spares found for this report' });
+    }
         res.json({
             message: 'Report data retrieved successfully',
-            reports: result.rows // list of reports
+            reports: {
+                comment: comment,
+                spares: sparesResult.rows
+            }
         });
     } catch (err) {
         console.error('Error fetching reports:', err);
