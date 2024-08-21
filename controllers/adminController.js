@@ -288,7 +288,7 @@ export const addSpare = async (req, res) => {
 // /admin/spares/update
 //Tested
 export const updateSpare = async (req, res) => {
-    const { id, name, quantity, reorderThreshold, price } = req.body;
+    const { id, name, quantity, reorderthreshold, price } = req.body;
 
     const sql = `
         UPDATE spares
@@ -298,7 +298,7 @@ export const updateSpare = async (req, res) => {
     `;
 
     try {
-        const result = await client.query(sql, [name, quantity, reorderThreshold, price, id]);
+        const result = await client.query(sql, [name, quantity, reorderthreshold, price, id]);
 
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Spare not found' });
