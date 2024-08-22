@@ -25,6 +25,7 @@ router.post('/spares/add', verifyToken, adminController.addSpare);
 router.put('/spares/update', verifyToken, adminController.updateSpare);
 router.delete('/spares/delete/:id', verifyToken, adminController.deleteSpare);
 router.post('/spares/:id/reorder', verifyToken, adminController.reorderSpares);
+router.get('/spares/getAll', verifyToken, adminController.getAllSpares);
 
 router.post('/services/add', verifyToken, upload.single("image"), adminController.addService);
 router.put('/services/update', verifyToken, upload.single("image"), adminController.updateService);
@@ -36,7 +37,7 @@ router.get('/services/servicesPerDay', verifyToken, adminController.getServicesP
 router.get('/users/:id',verifyToken,adminController.getUser);
 
 router.post('/technicians/createAccount', verifyToken, adminController.createTechnicianAccount);
-
+// router.post('/technicians/createAccount', adminController.createTechnicianAccount);
 router.get('/reports/request/:id', verifyToken, adminController.getReportForRequest);
 
 export default router;
