@@ -2,7 +2,6 @@ import express from 'express';
 import {
     getAllServices,
     getAllArticles,
-    getAllSpares,
     getServicesById
 } from '../controllers/commonController.js';
 

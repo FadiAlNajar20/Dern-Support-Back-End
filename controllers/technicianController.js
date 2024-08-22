@@ -132,7 +132,9 @@ export const technicianLogin = async (req, res) => {
       if(requesttype=="ServiceRequest")
       {
         result1 = await client.query
-        (`SELECT MaintenanceTime FROM Service JOIN ServiceRequest ON Service.id = ServiceRequest.ServiceId WHERE ServiceRequest.RequestId = $1`,[RequestId]
+        (`SELECT MaintenanceTime FROM Service
+          JOIN ServiceRequest ON Service.id = ServiceRequest.ServiceId
+          WHERE ServiceRequest.RequestId = $1`,[RequestId]
         );
        MaintenanceTime= result1.rows[0].maintenancetime;
       }

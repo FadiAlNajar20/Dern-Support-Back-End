@@ -10,6 +10,8 @@ import {
     import { verifyToken } from "../middlewares/authMiddleware.js";
 
     //router.post('/login', login);
+    
+    // use this prefix: /technician
 
     const router = express.Router();
     router.post("/login", technicianLogin);
