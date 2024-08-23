@@ -9,6 +9,7 @@ import {
   assignTechnician,
   generateEstimates,
 } from "../helper/helperMethods.js";
+const notificationId = uuidv4();
 
 export const testIo = async (req, res) => {
   console.log("Request received");
@@ -159,6 +160,7 @@ export const customerSignup = async (req, res) => {
 export const customerLogin = async (req, res) => {
   const { Email, Password } = req.body;
 
+
   //all field required
   if (!Email || !Password) {
     return res.status(400).json({ error: "Email and Password are required" });
@@ -245,6 +247,7 @@ export const customerGetEstimatedTimeAndCost = async (req, res) => {
 //Tested
 export const customerSendServiceRequest = async (req, res) => {
   const CustomerID = req.userId; //form authMiddleware
+  
   //console.log(CustomerID);
   const { ServiceID, Method } = req.body;
 
@@ -315,6 +318,7 @@ export const customerSendServiceRequest = async (req, res) => {
 //Tested
 export const customerSendFeedback = async (req, res) => {
   const CustomerID = req.userId; //form authMiddleware
+
 
   const { ServiceID, Rating, Comment } = req.body;
 
@@ -429,8 +433,10 @@ export const customerGetAllRequests = async (req, res) => {
 // /customers/final-approval-support-request
 //Tested
 export const customerSenApprovedSupportRequest = async (req, res) => {
+  
   console.log(req.body);
   const CustomerID = req.userId;
+ 
   console.log(CustomerID);
   const { Description, DeviceDeliveryMethod, Title, Category } = req.body;
   // TODO: CALL assign function From L
@@ -489,7 +495,14 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
       [Description, Title, Category, estimatedCost, imgUrl, requestID]
     );
 
+    io.emit("newRequest", {
+      id: notificationId,
+      message: "Your order has been successfully scheduled. Go to the information page to see the status of your order",
+    });
+      
     res.status(201).json({ message: "Request submitted" });
+
+    //res.status(201).json({ message: "Request submitted" });
   } catch (error) {
     console.error("Error executing query", error.stack);
     res.status(500).json({ error: "Internal server error" });

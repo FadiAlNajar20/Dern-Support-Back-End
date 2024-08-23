@@ -233,4 +233,20 @@ export const GetAssignedRequests = async (req, res) => {
       res.status(500).json({ error: "Failed to send report" });
   }
   };
+//=============================/technician/specialization========================================
+// /technician/specialization
+  //Tested
+export const GetSpecialization = async (req, res) => {
+  const TechnicianId = req.userId;
+    try {
 
+        const result = await client.query(
+            `SELECT Specialization FROM Technician WHERE Id= $1;`, [TechnicianId]
+        );
+        res.json(result.rows[0].specialization);
+    } catch (err) {
+        console.error("Get specialization error:", err);
+        res.status(500).json({ error: "Failed to get specialization" });
+    }
+  
+};

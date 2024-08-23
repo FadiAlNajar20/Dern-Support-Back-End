@@ -3,6 +3,23 @@ import jwt from "jsonwebtoken";
 import { client } from "../server.js";
 import bcrypt from "bcrypt";
 
+
+
+
+//================================/admin/user/:id ====================================
+export const getUser = async(req,res)=>{
+    const id = req.params.id;
+    const sql = 'SELECT email,name FROM "User" WHERE ID=$1;'
+    
+    try {
+        const result = await client.query(sql, [id]);
+        res.json(result.rows);
+      } catch (err) {
+        console.error("Get user by Id error:", err);
+        res.status(500).json({ error: "Failed to fetch user by Id " });
+      }
+}
+
 //=============================/admin/login========================================
 // /admin/login
 //Tested
@@ -28,7 +45,11 @@ export const login = async (req, res) => {
     const token = jwt.sign({ id: admin.id }, process.env.JWT_SECRET, {
       expiresIn: "24h",
     });
-    res.json({ token });
+    res.status(200).json({
+      message: "Login successfully",
+      success: true,
+      token,
+    });
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ error: "Failed to login" });
@@ -147,7 +168,7 @@ export const getAllFeedbackRelatedToService = async (req, res) => {
 
   try {
     const result = await client.query(sql, [serviceId]);
-    if (rowCount > 0) res.json(result.rows);
+    if (result.rowCount > 0) res.json(result.rows);
     else
       res
         .status(404)
@@ -417,41 +438,24 @@ export const addService = async (req, res) => {
 // /admin/services/update
 //Tested
 export const updateService = async (req, res) => {
-  const {
-    id,
-    title,
-    category,
-    issueDescription,
-    actualcost,
-    maintenanceTime,
-    isCommon,
-  } = req.body;
-  let imgUrl;
-  if (req.file !== undefined) {
-    // Variable is undefined
-    const filename = req.file.filename;
-    console.log(filename);
-    imgUrl = `${filename}`;
-  }
-  const sql = `
+    const {id, title, category, issuedescription, actualcost, maintenancetime, isCommon } = req.body;
+    let imgUrl;
+    if (req.file !== undefined) {
+      // Variable is undefined
+      const filename = req.file.filename;
+      console.log(filename);
+      imgUrl = `${filename}`;
+    }
+    const sql = `
         UPDATE service
         SET title = $1, category = $2, actualcost = $3, maintenanceTime = $4, image = $5, isCommon = $6, issueDescription = $7 
         WHERE id = $8
         RETURNING *;
     `;
 
-  const values = [
-    title,
-    category,
-    actualcost,
-    maintenanceTime,
-    imgUrl,
-    isCommon,
-    issueDescription,
-    id,
-  ];
-  try {
-    const result = await client.query(sql, values);
+    const values = [title, category, actualcost, maintenancetime, imgUrl, isCommon, issuedescription, id];
+    try {
+        const result = await client.query(sql, values);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ message: "Service not found" });
@@ -637,5 +641,44 @@ export const getReportForRequest = async (req, res) => {
   } catch (err) {
     console.error("Error fetching reports:", err);
     res.status(500).json({ message: "Failed to fetch report data" });
+  }
+};
+//=============================/admin/reports/details========================================
+export const getAllReportDetails = async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        r.id AS reportid,
+        r.comment AS reportcomment,
+        req.customerid,
+        req.technicianid,
+        u_t.name AS technicianname,
+        u_t.email AS technicianemail,
+        u_c.name AS customername,
+        u_c.email AS customeremail,
+        sp.name AS spareName,
+        rd.quantity AS spareQuantity,
+        sp.price AS sparePrice
+      FROM report r
+      JOIN request req ON r.requestid = req.id
+      JOIN technician t ON req.technicianid = t.id
+      JOIN customer c ON req.customerid = c.id
+      JOIN "User" u_t ON t.userid = u_t.id
+      JOIN "User" u_c ON c.userid = u_c.id
+      LEFT JOIN reportdetails rd ON r.id = rd.reportid
+      LEFT JOIN spares sp ON rd.spareid = sp.id
+      ORDER BY r.id;
+    `;
+    
+    const { rows } = await client.query(query);
+console.log("ok");
+
+    res.json({
+      message: 'All report data retrieved successfully',
+      reportDetails: rows
+    });
+  } catch (error) {
+    console.error('Error fetching reports:', error);
+    res.status(500).json({ message: 'Failed to fetch reports' });
   }
 };
