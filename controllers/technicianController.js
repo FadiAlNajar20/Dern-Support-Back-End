@@ -165,7 +165,7 @@ export const technicianLogin = async (req, res) => {
 
       const result = await client.query(
         `UPDATE Request SET status=$1 WHERE id = $2 RETURNING *;`
-        , ["Complete", RequestId]
+        , ["Completed", RequestId]
     );
 
       if(requesttype=="NewRequest")
