@@ -17,7 +17,7 @@ router.get('/feedback/getAll', verifyToken, adminController.getAllFeedback);
 router.get('/feedback/relatedToService/:id', verifyToken, adminController.getAllFeedbackRelatedToService);
 router.get('/feedback/relatedToService/avg/:id', verifyToken, adminController.getAVGForAllFeedbackRelatedToService);
 
-router.post('/articles/add', verifyToken, adminController.addArticle);
+router.post('/articles/add', verifyToken, upload.single("image"), adminController.addArticle);
 router.put('/articles/update', verifyToken, adminController.updateArticle);
 router.delete('/articles/delete/:id', verifyToken, adminController.deleteArticle);
 

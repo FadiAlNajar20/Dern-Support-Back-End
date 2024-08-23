@@ -110,7 +110,9 @@ export const getAllRequests = async (req, res) => {
   const id = req.userId;
   console.log(id, " ");
 
-  const sql = `SELECT * FROM Request;`;
+  const sql = `SELECT *
+    FROM request
+    LEFT JOIN newrequest ON request.id = newrequest.requestid;`;
 
   try {
     const result = await client.query(sql);
@@ -214,24 +216,37 @@ export const getAVGForAllFeedbackRelatedToService = async (req, res) => {
       .json({ error: "Failed to fetch feedback related to this service" });
   }
 };
-
 //=============================/admin/articles/add========================================
 // /admin/articles/add
 //Tested
 export const addArticle = async (req, res) => {
-  const { title, image, description } = req.body;
-  const sql = `INSERT INTO Article (Title, Image, description) VALUES ($1, $2, $3) RETURNING id;`;
-  const values = [title, image, description];
+  const { title, description } = req.body;
+  let imgUrl = null;
+  console.log(req.file);
+ 
+  if (req.file) {
+  console.log(req.file);
+      const filename = req.file.filename;
+      console.log("Uploaded filename:", filename);
+      imgUrl = filename;
+  }else {
+      console.log("No file received");
+  }
+
+  const sql = `INSERT INTO Article (Title, Image, description) VALUES ($1, $2, $3) RETURNING *;`;
+  const values = [title, imgUrl, description];
 
   try {
-    const result = await client.query(sql, values);
-    res.json({ message: "Article added", articleId: result.rows[0].id });
+      const result = await client.query(sql, values);
+      if(result.rowCount > 0){
+          res.json({ message: 'Article added', articleId: result.rows[0].id });
+          console.log("Inserted row:", result.rows[0]);
+      }
   } catch (err) {
-    console.error("Add article error:", err);
-    res.status(500).json({ error: "Failed to add article" });
+      console.error("Add article error:", err);
+      res.status(500).json({ error: "Failed to add article" });
   }
 };
-
 //=============================/admin/articles/update========================================
 // /admin/articles/update
 //Tested
