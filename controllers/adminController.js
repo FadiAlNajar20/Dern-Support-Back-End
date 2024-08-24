@@ -170,11 +170,12 @@ export const getAllFeedbackRelatedToService = async (req, res) => {
 
   try {
     const result = await client.query(sql, [serviceId]);
-    if (result.rowCount > 0) res.json(result.rows);
-    else
-      res
-        .status(404)
-        .json({ error: "No feedbacks on this services, or service not found" });
+    // if (result.rowCount > 0)
+       res.json(result.rows);
+    // else
+    //   res
+    //     .status(404)
+    //     .json({ error: "No feedbacks on this services, or service not found" });
   } catch (err) {
     console.error("Get all feedback related to service error:", err);
     res
