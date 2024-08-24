@@ -372,6 +372,8 @@ export const customerGetAllRequests = async (req, res) => {
     for (const request of requests) {
       
       let detailResult; //to store more info
+      let feedbackId=null;
+      let serviceId;
       //Case 1:
       if (request.requesttype == "NewRequest") {
         console.log("from new request" );
@@ -385,13 +387,15 @@ export const customerGetAllRequests = async (req, res) => {
         `,
           [request.id]
         );
+
+        
       }
       //Case 2:
       else if (request.requesttype == "ServiceRequest") {
         // Fetch Title and ActualCost from Service table
         detailResult = await client.query(
           `
-          SELECT Title, ActualCost 
+          SELECT Title, ActualCost,ID 
           FROM Service 
           WHERE ID = (
             SELECT ServiceID 
@@ -401,33 +405,30 @@ export const customerGetAllRequests = async (req, res) => {
         `,
           [request.id]
         );
+        
+        serviceId= detailResult.rows[0].id;
+
+        feedbackId=(await client.query(`
+          SELECT ID 
+          FROM Feedback
+          WHERE ServiceID = $1;
+          `,[serviceId]))?.rows[0]?.id;
       }
 
       console.log(detailResult);
-      
-      if (detailResult && detailResult.rows.length > 0) {
+      const hasData = detailResult && detailResult.rows.length > 0;
         // Push the title and actual cost to the results array
-        console.log(detailResult.rows[0]);
         
         results.push({
           id:request.id,
+          feedbackId:feedbackId,
+          serviceId:serviceId,
           status: request.status,
           estimatedTime: request.estimatedtime,
           requestType: request.requesttype,
-          title: detailResult.rows[0].title,
-          actualCost: detailResult.rows[0].actualcost,
+          title:  hasData? detailResult.rows[0].title:null,
+          actualCost: hasData?detailResult.rows[0].actualcost:null,
         });
-      } else {
-        // if no matching record is found
-        results.push({
-          id:request.id,
-          status: request.status,
-          estimatedTime: request.estimatedtime,
-          requestType: request.requesttype,
-          title: null,
-          actualCost: null,
-        });
-      }
     }
 
     // Send the final results to the client
