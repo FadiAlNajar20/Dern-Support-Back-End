@@ -110,9 +110,19 @@ export const getAllRequests = async (req, res) => {
   const id = req.userId;
   console.log(id, " ");
 
-  const sql = `SELECT *
-    FROM request
-    LEFT JOIN newrequest ON request.id = newrequest.requestid;`;
+ // const sql = `SELECT *
+ //  FROM request
+  //  LEFT JOIN newrequest ON request.id = newrequest.requestid;`;
+
+  const sql = `
+  SELECT request.*, newrequest.*, "User".name, "User".email, "User".phonenumber
+  FROM request
+  LEFT JOIN newrequest ON request.id = newrequest.requestid
+  LEFT JOIN customer ON request.customerId = customer.id
+  LEFT JOIN "User" ON customer.userId = "User".id;
+`;
+
+
 
   try {
     const result = await client.query(sql);
