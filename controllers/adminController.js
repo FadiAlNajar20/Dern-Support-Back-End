@@ -110,7 +110,19 @@ export const getAllRequests = async (req, res) => {
   const id = req.userId;
   console.log(id, " ");
 
-  const sql = `SELECT * FROM Request;`;
+ // const sql = `SELECT *
+ //  FROM request
+  //  LEFT JOIN newrequest ON request.id = newrequest.requestid;`;
+
+  const sql = `
+  SELECT request.*, newrequest.*, "User".name, "User".email, "User".phonenumber
+  FROM request
+  LEFT JOIN newrequest ON request.id = newrequest.requestid
+  LEFT JOIN customer ON request.customerId = customer.id
+  LEFT JOIN "User" ON customer.userId = "User".id;
+`;
+
+
 
   try {
     const result = await client.query(sql);
@@ -168,11 +180,12 @@ export const getAllFeedbackRelatedToService = async (req, res) => {
 
   try {
     const result = await client.query(sql, [serviceId]);
-    if (result.rowCount > 0) res.json(result.rows);
-    else
-      res
-        .status(404)
-        .json({ error: "No feedbacks on this services, or service not found" });
+    // if (result.rowCount > 0)
+       res.json(result.rows);
+    // else
+    //   res
+    //     .status(404)
+    //     .json({ error: "No feedbacks on this services, or service not found" });
   } catch (err) {
     console.error("Get all feedback related to service error:", err);
     res
@@ -214,24 +227,37 @@ export const getAVGForAllFeedbackRelatedToService = async (req, res) => {
       .json({ error: "Failed to fetch feedback related to this service" });
   }
 };
-
 //=============================/admin/articles/add========================================
 // /admin/articles/add
 //Tested
 export const addArticle = async (req, res) => {
-  const { title, image, description } = req.body;
-  const sql = `INSERT INTO Article (Title, Image, description) VALUES ($1, $2, $3) RETURNING id;`;
-  const values = [title, image, description];
+  const { title, description } = req.body;
+  let imgUrl = null;
+  console.log(req.file);
+ 
+  if (req.file) {
+  console.log(req.file);
+      const filename = req.file.filename;
+      console.log("Uploaded filename:", filename);
+      imgUrl = filename;
+  }else {
+      console.log("No file received");
+  }
+
+  const sql = `INSERT INTO Article (Title, Image, description) VALUES ($1, $2, $3) RETURNING *;`;
+  const values = [title, imgUrl, description];
 
   try {
-    const result = await client.query(sql, values);
-    res.json({ message: "Article added", articleId: result.rows[0].id });
+      const result = await client.query(sql, values);
+      if(result.rowCount > 0){
+          res.json({ message: 'Article added', articleId: result.rows[0].id });
+          console.log("Inserted row:", result.rows[0]);
+      }
   } catch (err) {
-    console.error("Add article error:", err);
-    res.status(500).json({ error: "Failed to add article" });
+      console.error("Add article error:", err);
+      res.status(500).json({ error: "Failed to add article" });
   }
 };
-
 //=============================/admin/articles/update========================================
 // /admin/articles/update
 //Tested
@@ -562,6 +588,22 @@ export const getServicesPerDay = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch services per day" });
   }
 };
+
+//=============================/admin/spares/getAll========================================
+// /admin/spares/getAll
+//Tested
+export const getAllSpares = async (req, res) => {
+  const sql = `SELECT * FROM Spares ORDER BY quantity;`;
+
+  try {
+    const result = await client.query(sql);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("View spares error:", err);
+    res.status(500).json({ error: "Failed to fetch spares" });
+  }
+};
+
 
 //=============================/admin/technicians/createAccount========================================
 // /admin/technicians/createAccount

@@ -83,7 +83,7 @@ export const customerVerifyEmail = async (req, res) => {
       userId,
     ]);
 
-    res.redirect(302, 'http://localhost:5173/verify-email');
+    res.redirect(302, "http://localhost:5173/verify-email");
     // res.status(200).json({
     //   success: true,
     //   message: "Email verified successfully.",
@@ -350,19 +350,89 @@ export const customerSendFeedback = async (req, res) => {
 // /customers/my-requests
 // Tested
 export const customerGetAllRequests = async (req, res) => {
-  // const customerId = parseInt(req.params.id);
-  //const customerId = req.params.id;
-  const customerId = req.userId; //from middleware
+  const customerId = req.userId; // from middleware
   try {
-    //get all Requests for customer
-    const result = await client.query(
+    // select the Status, EstimatedTime, and RequestType from the Request table
+    const requestResult = await client.query(
       `
-      SELECT * FROM Request WHERE CustomerID = $1;
+      SELECT ID, Status, EstimatedTime, RequestType 
+      FROM Request 
+      WHERE CustomerID = $1;
     `,
       [customerId]
     );
 
-    res.status(200).json(result.rows);
+    //Store the response object
+    const requests = requestResult.rows;
+    
+    // THis array to store the final results and send it to frontend based on RequestType
+    const results = [];
+
+    // Loop on each request to get more info(Title & ActualCost ) based on RequestType
+    for (const request of requests) {
+      
+      let detailResult; //to store more info
+      let feedbackId=null;
+      let serviceId;
+      //Case 1:
+      if (request.requesttype == "NewRequest") {
+        console.log("from new request" );
+        
+        // Fetch Title and ActualCost from NewRequest table
+        detailResult = await client.query(
+          `
+          SELECT Title, ActualCost 
+          FROM NewRequest 
+          WHERE RequestID = $1;
+        `,
+          [request.id]
+        );
+
+        
+      }
+      //Case 2:
+      else if (request.requesttype == "ServiceRequest") {
+        // Fetch Title and ActualCost from Service table
+        detailResult = await client.query(
+          `
+          SELECT Title, ActualCost,ID 
+          FROM Service 
+          WHERE ID = (
+            SELECT ServiceID 
+            FROM ServiceRequest 
+            WHERE RequestID = $1
+          );
+        `,
+          [request.id]
+        );
+        
+        serviceId= detailResult.rows[0].id;
+
+        feedbackId=(await client.query(`
+          SELECT ID 
+          FROM Feedback
+          WHERE ServiceID = $1;
+          `,[serviceId]))?.rows[0]?.id;
+      }
+
+      console.log(detailResult);
+      const hasData = detailResult && detailResult.rows.length > 0;
+        // Push the title and actual cost to the results array
+        
+        results.push({
+          id:request.id,
+          feedbackId:feedbackId,
+          serviceId:serviceId,
+          status: request.status,
+          estimatedTime: request.estimatedtime,
+          requestType: request.requesttype,
+          title:  hasData? detailResult.rows[0].title:null,
+          actualCost: hasData?detailResult.rows[0].actualcost:null,
+        });
+    }
+
+    // Send the final results to the client
+    res.status(200).json(results);
   } catch (error) {
     console.error("Error executing query", error.stack);
     res.status(500).json({ error: "Internal server error" });
@@ -442,6 +512,7 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
       
     res.status(201).json({ message: "Request submitted" });
 
+    //res.status(201).json({ message: "Request submitted" });
   } catch (error) {
     console.error("Error executing query", error.stack);
     res.status(500).json({ error: "Internal server error" });
