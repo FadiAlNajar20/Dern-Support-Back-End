@@ -6,7 +6,8 @@ import {
     GetAssignedRequests,
     updateCompletedRequest, 
     SendReport,
-    GetSpecialization
+    GetSpecialization,
+    getCreatedDate 
     } from "../controllers/technicianController.js";
     import { verifyToken } from "../middlewares/authMiddleware.js";
 
@@ -22,6 +23,7 @@ import {
     router.get("/requests/assigned",verifyToken, GetAssignedRequests);
     router.post("/send-report",verifyToken, SendReport);
     router.get("/specialization",verifyToken, GetSpecialization);
+    router.get("/createdDate",verifyToken,getCreatedDate)
 
     export default router;
 
