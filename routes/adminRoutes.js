@@ -17,7 +17,7 @@ router.get('/feedback/getAll', verifyToken, adminController.getAllFeedback);
 router.get('/feedback/relatedToService/:id', verifyToken, adminController.getAllFeedbackRelatedToService);
 router.get('/feedback/relatedToService/avg/:id', verifyToken, adminController.getAVGForAllFeedbackRelatedToService);
 
-router.post('/articles/add', verifyToken, adminController.addArticle);
+router.post('/articles/add', verifyToken, upload.single("image"), adminController.addArticle);
 router.put('/articles/update', verifyToken, adminController.updateArticle);
 router.delete('/articles/delete/:id', verifyToken, adminController.deleteArticle);
 
@@ -33,8 +33,6 @@ router.delete('/services/delete/:id', verifyToken, adminController.deleteService
 router.get('/services/usageRate', verifyToken, adminController.getServicesUsage);
 router.get('/services/getRatings', verifyToken, adminController.getServicesRatings);
 router.get('/services/servicesPerDay', verifyToken, adminController.getServicesPerDay);
-
-router.get('/users/:id',verifyToken,adminController.getUser);
 
 router.post('/technicians/createAccount', verifyToken, adminController.createTechnicianAccount);
 // router.post('/technicians/createAccount', adminController.createTechnicianAccount);

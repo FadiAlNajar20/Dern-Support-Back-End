@@ -45,7 +45,11 @@ export const login = async (req, res) => {
     const token = jwt.sign({ id: admin.id }, process.env.JWT_SECRET, {
       expiresIn: "24h",
     });
-    res.json({ token });
+    res.status(200).json({
+      message: "Login successfully",
+      success: true,
+      token,
+    });
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ error: "Failed to login" });
@@ -106,7 +110,9 @@ export const getAllRequests = async (req, res) => {
   const id = req.userId;
   console.log(id, " ");
 
-  const sql = `SELECT * FROM Request;`;
+  const sql = `SELECT *
+    FROM request
+    LEFT JOIN newrequest ON request.id = newrequest.requestid;`;
 
   try {
     const result = await client.query(sql);
@@ -210,24 +216,37 @@ export const getAVGForAllFeedbackRelatedToService = async (req, res) => {
       .json({ error: "Failed to fetch feedback related to this service" });
   }
 };
-
 //=============================/admin/articles/add========================================
 // /admin/articles/add
 //Tested
 export const addArticle = async (req, res) => {
-  const { title, image, description } = req.body;
-  const sql = `INSERT INTO Article (Title, Image, description) VALUES ($1, $2, $3) RETURNING id;`;
-  const values = [title, image, description];
+  const { title, description } = req.body;
+  let imgUrl = null;
+  console.log(req.file);
+ 
+  if (req.file) {
+  console.log(req.file);
+      const filename = req.file.filename;
+      console.log("Uploaded filename:", filename);
+      imgUrl = filename;
+  }else {
+      console.log("No file received");
+  }
+
+  const sql = `INSERT INTO Article (Title, Image, description) VALUES ($1, $2, $3) RETURNING *;`;
+  const values = [title, imgUrl, description];
 
   try {
-    const result = await client.query(sql, values);
-    res.json({ message: "Article added", articleId: result.rows[0].id });
+      const result = await client.query(sql, values);
+      if(result.rowCount > 0){
+          res.json({ message: 'Article added', articleId: result.rows[0].id });
+          console.log("Inserted row:", result.rows[0]);
+      }
   } catch (err) {
-    console.error("Add article error:", err);
-    res.status(500).json({ error: "Failed to add article" });
+      console.error("Add article error:", err);
+      res.status(500).json({ error: "Failed to add article" });
   }
 };
-
 //=============================/admin/articles/update========================================
 // /admin/articles/update
 //Tested
@@ -434,41 +453,24 @@ export const addService = async (req, res) => {
 // /admin/services/update
 //Tested
 export const updateService = async (req, res) => {
-  const {
-    id,
-    title,
-    category,
-    issueDescription,
-    actualcost,
-    maintenanceTime,
-    isCommon,
-  } = req.body;
-  let imgUrl;
-  if (req.file !== undefined) {
-    // Variable is undefined
-    const filename = req.file.filename;
-    console.log(filename);
-    imgUrl = `${filename}`;
-  }
-  const sql = `
+    const {id, title, category, issuedescription, actualcost, maintenancetime, isCommon } = req.body;
+    let imgUrl;
+    if (req.file !== undefined) {
+      // Variable is undefined
+      const filename = req.file.filename;
+      console.log(filename);
+      imgUrl = `${filename}`;
+    }
+    const sql = `
         UPDATE service
         SET title = $1, category = $2, actualcost = $3, maintenanceTime = $4, image = $5, isCommon = $6, issueDescription = $7 
         WHERE id = $8
         RETURNING *;
     `;
 
-  const values = [
-    title,
-    category,
-    actualcost,
-    maintenanceTime,
-    imgUrl,
-    isCommon,
-    issueDescription,
-    id,
-  ];
-  try {
-    const result = await client.query(sql, values);
+    const values = [title, category, actualcost, maintenancetime, imgUrl, isCommon, issuedescription, id];
+    try {
+        const result = await client.query(sql, values);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ message: "Service not found" });
@@ -670,5 +672,44 @@ export const getReportForRequest = async (req, res) => {
   } catch (err) {
     console.error("Error fetching reports:", err);
     res.status(500).json({ message: "Failed to fetch report data" });
+  }
+};
+//=============================/admin/reports/details========================================
+export const getAllReportDetails = async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        r.id AS reportid,
+        r.comment AS reportcomment,
+        req.customerid,
+        req.technicianid,
+        u_t.name AS technicianname,
+        u_t.email AS technicianemail,
+        u_c.name AS customername,
+        u_c.email AS customeremail,
+        sp.name AS spareName,
+        rd.quantity AS spareQuantity,
+        sp.price AS sparePrice
+      FROM report r
+      JOIN request req ON r.requestid = req.id
+      JOIN technician t ON req.technicianid = t.id
+      JOIN customer c ON req.customerid = c.id
+      JOIN "User" u_t ON t.userid = u_t.id
+      JOIN "User" u_c ON c.userid = u_c.id
+      LEFT JOIN reportdetails rd ON r.id = rd.reportid
+      LEFT JOIN spares sp ON rd.spareid = sp.id
+      ORDER BY r.id;
+    `;
+    
+    const { rows } = await client.query(query);
+console.log("ok");
+
+    res.json({
+      message: 'All report data retrieved successfully',
+      reportDetails: rows
+    });
+  } catch (error) {
+    console.error('Error fetching reports:', error);
+    res.status(500).json({ message: 'Failed to fetch reports' });
   }
 };
