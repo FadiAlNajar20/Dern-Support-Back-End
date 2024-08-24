@@ -364,15 +364,18 @@ export const customerGetAllRequests = async (req, res) => {
 
     //Store the response object
     const requests = requestResult.rows;
-
+    
     // THis array to store the final results and send it to frontend based on RequestType
     const results = [];
 
     // Loop on each request to get more info(Title & ActualCost ) based on RequestType
     for (const request of requests) {
+      
       let detailResult; //to store more info
       //Case 1:
-      if (request.RequestType === "NewRequest") {
+      if (request.requesttype == "NewRequest") {
+        console.log("from new request" );
+        
         // Fetch Title and ActualCost from NewRequest table
         detailResult = await client.query(
           `
@@ -380,11 +383,11 @@ export const customerGetAllRequests = async (req, res) => {
           FROM NewRequest 
           WHERE RequestID = $1;
         `,
-          [request.ID]
+          [request.id]
         );
       }
       //Case 2:
-      else if (request.RequestType === "ServiceRequest") {
+      else if (request.requesttype == "ServiceRequest") {
         // Fetch Title and ActualCost from Service table
         detailResult = await client.query(
           `
@@ -396,27 +399,33 @@ export const customerGetAllRequests = async (req, res) => {
             WHERE RequestID = $1
           );
         `,
-          [request.ID]
+          [request.id]
         );
       }
 
+      console.log(detailResult);
+      
       if (detailResult && detailResult.rows.length > 0) {
         // Push the title and actual cost to the results array
+        console.log(detailResult.rows[0]);
+        
         results.push({
-          Status: request.Status,
-          EstimatedTime: request.EstimatedTime,
-          RequestType: request.RequestType,
-          Title: detailResult.rows[0].Title,
-          ActualCost: detailResult.rows[0].ActualCost,
+          id:request.id,
+          status: request.status,
+          estimatedTime: request.estimatedtime,
+          requestType: request.requesttype,
+          title: detailResult.rows[0].title,
+          actualCost: detailResult.rows[0].actualcost,
         });
       } else {
         // if no matching record is found
         results.push({
-          Status: request.Status,
-          EstimatedTime: request.EstimatedTime,
-          RequestType: request.RequestType,
-          Title: null,
-          ActualCost: null,
+          id:request.id,
+          status: request.status,
+          estimatedTime: request.estimatedtime,
+          requestType: request.requesttype,
+          title: null,
+          actualCost: null,
         });
       }
     }

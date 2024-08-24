@@ -132,17 +132,19 @@ export const technicianLogin = async (req, res) => {
       if(requesttype=="ServiceRequest")
       {
         result1 = await client.query
-        (`SELECT MaintenanceTime FROM Service JOIN ServiceRequest ON Service.id = ServiceRequest.ServiceId WHERE ServiceRequest.RequestId = $1`,[RequestId]
+        (`SELECT MaintenanceTime FROM Service
+          JOIN ServiceRequest ON Service.ID = ServiceRequest.ServiceID
+          WHERE ServiceRequest.RequestID = $1;`,[RequestId]
         );
        MaintenanceTime= result1.rows[0].maintenancetime;
       }
 
-     // Update technician's availability after updating request by technician
+    //  Update technician's availability after updating request by technician
         const ActualTime= await updateTechnicianAvailability(TechnicianId, MaintenanceTime); 
       // update the request with the ActualTime and status
         const result = await client.query(
             `UPDATE Request SET actualtime = $1, status=$2 WHERE id = $3 RETURNING *;`
-            , [ActualTime, "InProgress", RequestId]
+            , [ActualTime, "In Progress", RequestId]
         );
         
         res.json({ message: 'Request Updated Successfully', request: result.rows[0] });
@@ -163,7 +165,7 @@ export const technicianLogin = async (req, res) => {
 
       const result = await client.query(
         `UPDATE Request SET status=$1 WHERE id = $2 RETURNING *;`
-        , ["Complete", RequestId]
+        , ["Completed", RequestId]
     );
 
       if(requesttype=="NewRequest")
@@ -248,5 +250,4 @@ export const GetSpecialization = async (req, res) => {
         console.error("Get specialization error:", err);
         res.status(500).json({ error: "Failed to get specialization" });
     }
-  
 };
