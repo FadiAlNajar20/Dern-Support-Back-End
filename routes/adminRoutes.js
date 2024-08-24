@@ -38,4 +38,6 @@ router.post('/technicians/createAccount', verifyToken, adminController.createTec
 // router.post('/technicians/createAccount', adminController.createTechnicianAccount);
 router.get('/reports/request/:id', verifyToken, adminController.getReportForRequest);
 
+router.get('/users/:id',verifyToken,adminController.getUser)
+
 export default router;
