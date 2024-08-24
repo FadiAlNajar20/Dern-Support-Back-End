@@ -36,5 +36,6 @@ router.get('/services/servicesPerDay', verifyToken, adminController.getServicesP
 router.post('/technicians/createAccount', verifyToken, adminController.createTechnicianAccount);
 
 router.get('/reports/request/:id', verifyToken, adminController.getReportForRequest);
+router.post('/reports', verifyToken, adminController.getAllReportDetails);
 
 export default router;
