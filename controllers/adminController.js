@@ -35,7 +35,7 @@ export const login = async (req, res) => {
 
     const admin = result.rows[0];
     console.log(admin, "");
-    const passwordIsValid = bcrypt.compare(Password, admin.password);
+    const passwordIsValid = await bcrypt.compare(Password, admin.password);
     if (!passwordIsValid)
       return res.status(401).json({ token: null, message: "Invalid password" });
 

@@ -120,7 +120,7 @@ export const technicianLogin = async (req, res) => {
     }
 
     const { password } = result.rows[0];
-    const isMatch = bcrypt.compare(Password, password);
+    const isMatch = await bcrypt.compare(Password, password);
     console.log(password, Email, Password);
 
     //Check if the password matches the password stored in the database
