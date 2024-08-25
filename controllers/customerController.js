@@ -192,7 +192,7 @@ export const customerLogin = async (req, res) => {
     // plainTextPassword is the password provided by the user in the login request
     // hashedPassword is the password stored in the database in hashed format
     const { password } = result.rows[0];
-    const isMatch = bcrypt.compare(Password, password);
+    const isMatch = await bcrypt.compare(Password, password);
 
     //Check if the password matches the password stored in the database
     if (!isMatch) {

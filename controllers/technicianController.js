@@ -9,17 +9,31 @@ import { v4 as uuidv4 } from "uuid";
 //   message: "Your order has been successfully scheduled. Go to the information page to see the status of your order",
 // });
 
+export const getTechnicainName = async (req, res) => {
+  const TechnicianId = req.userId;
+  try {
+    const result = await client.query(
+      `SELECT name FROM "User" WHERE Id= (
+      SELECT userid FROM Technician WHERE Id = $1
+      );`,
+      [TechnicianId]
+    );
+    
+    res.json(result.rows[0].name);
+  } catch (err) {
+    console.error("Get technician name error:", err);
+    res.status(500).json({ error: "Failed to get technician name" });
+  }
+};
+
 export const getCreatedDate = async (req, res) => {
   const TechnicianId = req.userId;
   try {
     const result = await client.query(
-    //  `SELECT createddate FROM Technician WHERE Id= $1;`,
-    `SELECT createdAt FROM Technician WHERE Id= $1;`,
+      `SELECT * FROM technician WHERE Id= $1;`,
       [TechnicianId]
     );
-    console.log((result.rows[0]));
-    
-   res.json({createddate: "2024-08"});
+    res.json(result.rows[0].createdAt);
   } catch (err) {
     console.error("Get createddate error:", err);
     res.status(500).json({ error: "Failed to get createddate" });
@@ -30,7 +44,7 @@ async function updateTechnicianAvailability(technicianId, maintenanceTime) {
   try {
     // Fetch the current availability
     const result = await client.query(
-      "SELECT availability FROM Technician WHERE id = $1",
+      "SELECT * FROM Technician WHERE id = $1",
       [technicianId]
     );
     let currentAvailability = new Date(result.rows[0].availability);
@@ -40,6 +54,12 @@ async function updateTechnicianAvailability(technicianId, maintenanceTime) {
     workStart.setHours(8, 0, 0, 0);
     const workEnd = new Date(currentAvailability);
     workEnd.setHours(17, 0, 0, 0);
+
+    //If the availability is before the current date, set it to current availability
+    const currentDate = new Date();
+    if (currentAvailability < currentDate) {
+      currentAvailability = currentDate;
+  }
 
     let hoursToAdd = maintenanceTime;
 
@@ -85,6 +105,8 @@ async function updateTechnicianAvailability(technicianId, maintenanceTime) {
     throw error;
   }
 }
+
+
 //=============================/technician/login=========================================
 // /technician/login
 // Tested
@@ -115,7 +137,7 @@ export const technicianLogin = async (req, res) => {
     }
 
     const { password } = result.rows[0];
-    const isMatch = bcrypt.compare(Password, password);
+    const isMatch = await bcrypt.compare(Password, password);
     console.log(password, Email, Password);
 
     //Check if the password matches the password stored in the database

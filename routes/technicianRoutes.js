@@ -2,18 +2,19 @@ import express from 'express';
 import {
     technicianLogin,
     technicianLogout,
-    updateAssignedRequest, 
+    updateAssignedRequest,
     GetAssignedRequests,
-    updateCompletedRequest, 
+    updateCompletedRequest,
     SendReport,
     GetSpecialization,
-    getCreatedDate 
+
+    getCreatedDate,
+    getTechnicainName
     } from "../controllers/technicianController.js";
     import { verifyToken } from "../middlewares/authMiddleware.js";
 
-    //router.post('/login', login);
-    
-    // use this prefix: /technician
+
+//router.post('/login', login);
 
     const router = express.Router();
     router.post("/login", technicianLogin);
@@ -24,7 +25,8 @@ import {
     router.post("/send-report",verifyToken, SendReport);
     router.get("/specialization",verifyToken, GetSpecialization);
     router.get("/createdDate",verifyToken,getCreatedDate)
-
+    router.get("/name",verifyToken,getTechnicainName)
     export default router;
+
 
 
