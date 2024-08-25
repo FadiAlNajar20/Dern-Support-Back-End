@@ -3,13 +3,14 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 export const getCreatedDate = async (req, res) => {
-  const TechnicianId = req.userId;
+  const TechnicianId = req.params.id;
+  
   try {
     const result = await client.query(
-      `SELECT createddate FROM Technician WHERE Id= $1;`,
+      `SELECT * FROM technician WHERE Id= $1;`,
       [TechnicianId]
     );
-    res.json(result.rows[0].createddate);
+    res.json(result.rows[0].createdAt);
   } catch (err) {
     console.error("Get createddate error:", err);
     res.status(500).json({ error: "Failed to get createddate" });

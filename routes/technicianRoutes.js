@@ -23,7 +23,7 @@ import {
     router.get("/requests/assigned",verifyToken, GetAssignedRequests);
     router.post("/send-report",verifyToken, SendReport);
     router.get("/specialization",verifyToken, GetSpecialization);
-    router.get("/createdDate",verifyToken,getCreatedDate)
+    router.get("/createdDate/:id",verifyToken,getCreatedDate)
 
     export default router;
 
