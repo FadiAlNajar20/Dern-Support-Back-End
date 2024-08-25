@@ -3,8 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 export const getCreatedDate = async (req, res) => {
-  const TechnicianId = req.params.id;
-  
+  const TechnicianId = req.userId;
   try {
     const result = await client.query(
       `SELECT * FROM technician WHERE Id= $1;`,
@@ -21,7 +20,7 @@ async function updateTechnicianAvailability(technicianId, maintenanceTime) {
   try {
     // Fetch the current availability
     const result = await client.query(
-      "SELECT availability FROM Technician WHERE id = $1",
+      "SELECT * FROM Technician WHERE id = $1",
       [technicianId]
     );
     let currentAvailability = new Date(result.rows[0].availability);
@@ -76,6 +75,8 @@ async function updateTechnicianAvailability(technicianId, maintenanceTime) {
     throw error;
   }
 }
+
+
 //=============================/technician/login=========================================
 // /technician/login
 // Tested
