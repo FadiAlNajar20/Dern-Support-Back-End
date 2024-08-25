@@ -114,12 +114,14 @@ export const getAllRequests = async (req, res) => {
  //  FROM request
   //  LEFT JOIN newrequest ON request.id = newrequest.requestid;`;
 
-  const sql = `
-  SELECT request.*, newrequest.*, "User".name, "User".email, "User".phonenumber
-  FROM request
-  LEFT JOIN newrequest ON request.id = newrequest.requestid
-  LEFT JOIN customer ON request.customerId = customer.id
-  LEFT JOIN "User" ON customer.userId = "User".id;
+const sql = `
+SELECT  request.id, "User".name, "User".email, "User".phonenumber,
+request.status, request.devicedeliverymethod, request.createddate, request.requesttype, request.actualtime, request.estimatedtime,
+newrequest.issuedescription, newrequest.title, newrequest.category, newrequest.estimatedcost, newrequest.maintenancetime, newrequest.image, newrequest.actualcost
+FROM request
+LEFT JOIN newrequest ON request.id = newrequest.requestid
+LEFT JOIN customer ON request.customerId = customer.id
+LEFT JOIN "User" ON customer.userId = "User".id;
 `;
 
 
