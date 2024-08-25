@@ -20,6 +20,12 @@ async function updateTechnicianAvailability(technicianId, maintenanceTime) {
     const workEnd = new Date(currentAvailability);
     workEnd.setHours(17, 0, 0, 0);
 
+    //If the availability is before the current date, set it to current availability
+    const currentDate = new Date();
+    if (currentAvailability < currentDate) {
+      currentAvailability = currentDate;
+  }
+
     let hoursToAdd = maintenanceTime;
 
     // If the current availability is before the working hours, set it to workStart
