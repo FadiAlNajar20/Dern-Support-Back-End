@@ -9,7 +9,7 @@ import {
   assignTechnician,
   generateEstimates,
 } from "../helper/helperMethods.js";
-const notificationId = uuidv4();
+
 
 export const testIo = async (req, res) => {
   console.log("Request received");
@@ -236,6 +236,8 @@ export const customerGetEstimatedTimeAndCost = async (req, res) => {
       EstimatedTime: estimatedCompletionTime,
       EstimatedCost: estimatedCost,
     });
+
+    
   } catch (error) {
     console.error("Error executing query", error.stack);
     res.status(500).json({ error: "Internal server error" });
@@ -506,7 +508,8 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
     );
 
     io.emit("newRequest", {
-      id: notificationId,
+      userType:"customers",
+      id: uuidv4(),
       message: "Your order has been successfully scheduled. Go to the information page to see the status of your order",
     });
       

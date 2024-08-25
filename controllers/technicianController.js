@@ -1,15 +1,25 @@
 import { client } from "../server.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { io } from "../server.js";
+import { v4 as uuidv4 } from "uuid";
+// io.emit("newRequest", {
+//   userType:"customers",
+//   id: uuidv4(),
+//   message: "Your order has been successfully scheduled. Go to the information page to see the status of your order",
+// });
 
 export const getCreatedDate = async (req, res) => {
   const TechnicianId = req.userId;
   try {
     const result = await client.query(
-      `SELECT createddate FROM Technician WHERE Id= $1;`,
+    //  `SELECT createddate FROM Technician WHERE Id= $1;`,
+    `SELECT createdAt FROM Technician WHERE Id= $1;`,
       [TechnicianId]
     );
-    res.json(result.rows[0].createddate);
+    console.log((result.rows[0]));
+    
+   res.json({createddate: "2024-08"});
   } catch (err) {
     console.error("Get createddate error:", err);
     res.status(500).json({ error: "Failed to get createddate" });
@@ -96,6 +106,8 @@ export const technicianLogin = async (req, res) => {
     WHERE "User".email = $1;`,
       [Email]
     );
+  
+    
 
     // check if the technician is exist or not
     if (result.rows.length === 0) {

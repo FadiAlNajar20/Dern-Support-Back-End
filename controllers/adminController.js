@@ -2,6 +2,13 @@
 import jwt from "jsonwebtoken";
 import { client } from "../server.js";
 import bcrypt from "bcrypt";
+import { io } from "../server.js";
+import { v4 as uuidv4 } from "uuid";
+// io.emit("newRequest", {
+//   userType:"customers",
+//   id: uuidv4(),
+//   message: "Your order has been successfully scheduled. Go to the information page to see the status of your order",
+// });
 
 
 
@@ -609,7 +616,7 @@ export const getAllSpares = async (req, res) => {
 // /admin/technicians/createAccount
 //Tested
 export const createTechnicianAccount = async (req, res) => {
-  const { Name, Email, Password, PhoneNumber, Specialization } = req.body;
+  const { Name, Email, Password, PhoneNumber, specialization } = req.body;
   const hashedPassword = bcrypt.hashSync(Password, 10);
   const sqlInsertUser = `INSERT INTO "User" (Name, Email, Password, PhoneNumber) VALUES ($1, $2, $3, $4) RETURNING id;`;
   const values = [Name, Email, hashedPassword, PhoneNumber];
@@ -623,7 +630,7 @@ export const createTechnicianAccount = async (req, res) => {
       const sqlInsertTechnician = `INSERT INTO technician (userid, specialization) VALUES ($1, $2) RETURNING id;`;
       const resultAddToTechnician = await client.query(sqlInsertTechnician, [
         userId,
-        Specialization,
+        specialization,
       ]);
 
       if (resultAddToTechnician.rowCount > 0) {
