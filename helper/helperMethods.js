@@ -1,4 +1,11 @@
 import { client } from "../server.js";
+import { io } from "../server.js";
+import { v4 as uuidv4 } from "uuid";
+// io.emit("newRequest", {
+//   userType:"customers",
+//   id: uuidv4(),
+//   message: "Your order has been successfully scheduled. Go to the information page to see the status of your order",
+// });
 export const assignTechnician = async (requestCategory) => {
   try {
     // Step 1: Find the most available technician with the required category
@@ -29,8 +36,14 @@ export const assignTechnician = async (requestCategory) => {
     //     `,
     //   [technicianId, requestId]
     // );
-
+    io.emit("newRequest", {
+      userType:"technician",
+      id: uuidv4(),
+     Message: "Your order has been successfully scheduled. Go to the information page to see the status of your order."
+     });
+    
     return technicianId;
+    
   } catch (error) {
     console.error("Error assigning technician", error.stack);
     throw new Error("Technician assignment failed");

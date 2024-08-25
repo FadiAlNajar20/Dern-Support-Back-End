@@ -2,6 +2,27 @@
 import jwt from "jsonwebtoken";
 import { client } from "../server.js";
 import bcrypt from "bcrypt";
+import { io } from "../server.js";
+import { v4 as uuidv4 } from "uuid";
+// io.emit("newRequest", {
+//   userType:"customers",
+//   id: uuidv4(),
+//   message: "Your order has been successfully scheduled. Go to the information page to see the status of your order",
+// });
+
+//================================/admin/user/:id ====================================
+export const getUserNameAndEmail = async (req, res) => {
+  const id = req.params.id;
+  const sql = 'SELECT email,name FROM "User" WHERE ID=$1;';
+
+  try {
+    const result = await client.query(sql, [id]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Get user by Id error:", err);
+    res.status(500).json({ error: "Failed to fetch user by Id " });
+  }
+};
 
 //=============================/admin/login========================================
 // /admin/login
@@ -21,14 +42,18 @@ export const login = async (req, res) => {
 
     const admin = result.rows[0];
     console.log(admin, "");
-    const passwordIsValid = bcrypt.compare(Password, admin.password);
+    const passwordIsValid = await bcrypt.compare(Password, admin.password);
     if (!passwordIsValid)
       return res.status(401).json({ token: null, message: "Invalid password" });
 
     const token = jwt.sign({ id: admin.id }, process.env.JWT_SECRET, {
       expiresIn: "24h",
     });
-    res.json({ token });
+    res.status(200).json({
+      message: "Login successfully",
+      success: true,
+      token,
+    });
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ error: "Failed to login" });
@@ -89,7 +114,21 @@ export const getAllRequests = async (req, res) => {
   const id = req.userId;
   console.log(id, " ");
 
-  const sql = `SELECT * FROM Request;`;
+ // const sql = `SELECT *
+ //  FROM request
+  //  LEFT JOIN newrequest ON request.id = newrequest.requestid;`;
+
+const sql = `
+SELECT  request.id, "User".name, "User".email, "User".phonenumber,
+request.status, request.devicedeliverymethod, request.createddate, request.requesttype, request.actualtime, request.estimatedtime,
+newrequest.issuedescription, newrequest.title, newrequest.category, newrequest.estimatedcost, newrequest.maintenancetime, newrequest.image, newrequest.actualcost
+FROM request
+LEFT JOIN newrequest ON request.id = newrequest.requestid
+LEFT JOIN customer ON request.customerId = customer.id
+LEFT JOIN "User" ON customer.userId = "User".id;
+`;
+
+
 
   try {
     const result = await client.query(sql);
@@ -147,11 +186,12 @@ export const getAllFeedbackRelatedToService = async (req, res) => {
 
   try {
     const result = await client.query(sql, [serviceId]);
-    if (result.rowCount > 0) res.json(result.rows);
-    else
-      res
-        .status(404)
-        .json({ error: "No feedbacks on this services, or service not found" });
+    // if (result.rowCount > 0)
+    res.json(result.rows);
+    // else
+    //   res
+    //     .status(404)
+    //     .json({ error: "No feedbacks on this services, or service not found" });
   } catch (err) {
     console.error("Get all feedback related to service error:", err);
     res
@@ -193,24 +233,37 @@ export const getAVGForAllFeedbackRelatedToService = async (req, res) => {
       .json({ error: "Failed to fetch feedback related to this service" });
   }
 };
-
 //=============================/admin/articles/add========================================
 // /admin/articles/add
 //Tested
 export const addArticle = async (req, res) => {
-  const { title, image, description } = req.body;
-  const sql = `INSERT INTO Article (Title, Image, description) VALUES ($1, $2, $3) RETURNING id;`;
-  const values = [title, image, description];
+  const { title, description } = req.body;
+  let imgUrl = null;
+  console.log(req.file);
+
+  if (req.file) {
+    console.log(req.file);
+    const filename = req.file.filename;
+    console.log("Uploaded filename:", filename);
+    imgUrl = filename;
+  } else {
+    console.log("No file received");
+  }
+
+  const sql = `INSERT INTO Article (Title, Image, description) VALUES ($1, $2, $3) RETURNING *;`;
+  const values = [title, imgUrl, description];
 
   try {
     const result = await client.query(sql, values);
-    res.json({ message: "Article added", articleId: result.rows[0].id });
+    if (result.rowCount > 0) {
+      res.json({ message: "Article added", articleId: result.rows[0].id });
+      console.log("Inserted row:", result.rows[0]);
+    }
   } catch (err) {
     console.error("Add article error:", err);
     res.status(500).json({ error: "Failed to add article" });
   }
 };
-
 //=============================/admin/articles/update========================================
 // /admin/articles/update
 //Tested
@@ -421,9 +474,9 @@ export const updateService = async (req, res) => {
     id,
     title,
     category,
-    issueDescription,
+    issuedescription,
     actualcost,
-    maintenanceTime,
+    maintenancetime,
     isCommon,
   } = req.body;
   let imgUrl;
@@ -444,10 +497,10 @@ export const updateService = async (req, res) => {
     title,
     category,
     actualcost,
-    maintenanceTime,
+    maintenancetime,
     imgUrl,
     isCommon,
-    issueDescription,
+    issuedescription,
     id,
   ];
   try {
@@ -559,11 +612,26 @@ export const getServicesPerDay = async (req, res) => {
   }
 };
 
+//=============================/admin/spares/getAll========================================
+// /admin/spares/getAll
+//Tested
+export const getAllSpares = async (req, res) => {
+  const sql = `SELECT * FROM Spares ORDER BY quantity;`;
+
+  try {
+    const result = await client.query(sql);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("View spares error:", err);
+    res.status(500).json({ error: "Failed to fetch spares" });
+  }
+};
+
 //=============================/admin/technicians/createAccount========================================
 // /admin/technicians/createAccount
 //Tested
 export const createTechnicianAccount = async (req, res) => {
-  const { Name, Email, Password, PhoneNumber, Specialization } = req.body;
+  const { Name, Email, Password, PhoneNumber, specialization } = req.body;
   const hashedPassword = bcrypt.hashSync(Password, 10);
   const sqlInsertUser = `INSERT INTO "User" (Name, Email, Password, PhoneNumber) VALUES ($1, $2, $3, $4) RETURNING id;`;
   const values = [Name, Email, hashedPassword, PhoneNumber];
@@ -577,7 +645,7 @@ export const createTechnicianAccount = async (req, res) => {
       const sqlInsertTechnician = `INSERT INTO technician (userid, specialization) VALUES ($1, $2) RETURNING id;`;
       const resultAddToTechnician = await client.query(sqlInsertTechnician, [
         userId,
-        Specialization,
+        specialization,
       ]);
 
       if (resultAddToTechnician.rowCount > 0) {
@@ -637,5 +705,44 @@ export const getReportForRequest = async (req, res) => {
   } catch (err) {
     console.error("Error fetching reports:", err);
     res.status(500).json({ message: "Failed to fetch report data" });
+  }
+};
+//=============================/admin/reports/details========================================
+export const getAllReportDetails = async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        r.id AS reportid,
+        r.comment AS reportcomment,
+        req.customerid,
+        req.technicianid,
+        u_t.name AS technicianname,
+        u_t.email AS technicianemail,
+        u_c.name AS customername,
+        u_c.email AS customeremail,
+        sp.name AS spareName,
+        rd.quantity AS spareQuantity,
+        sp.price AS sparePrice
+      FROM report r
+      JOIN request req ON r.requestid = req.id
+      JOIN technician t ON req.technicianid = t.id
+      JOIN customer c ON req.customerid = c.id
+      JOIN "User" u_t ON t.userid = u_t.id
+      JOIN "User" u_c ON c.userid = u_c.id
+      LEFT JOIN reportdetails rd ON r.id = rd.reportid
+      LEFT JOIN spares sp ON rd.spareid = sp.id
+      ORDER BY r.id;
+    `;
+
+    const { rows } = await client.query(query);
+    console.log("ok");
+
+    res.json({
+      message: "All report data retrieved successfully",
+      reportDetails: rows,
+    });
+  } catch (error) {
+    console.error("Error fetching reports:", error);
+    res.status(500).json({ message: "Failed to fetch reports" });
   }
 };

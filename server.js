@@ -9,7 +9,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import customerRoutes from "./routes/customerRoutes.js";
 import commonRoutes from "./routes/commonRoutes.js";
 import technicianRoutes from "./routes/technicianRoutes.js";
-
+import testRoute from "./routes/testRoute.js";
 
 dotenv.config();
 
@@ -42,6 +42,7 @@ app.use("/admin", adminRoutes);
 app.use("/customers", customerRoutes);
 app.use("/technician",technicianRoutes);
 app.use("/common", commonRoutes);
+app.use("/test",testRoute)
 
 // connect Socket.io for notifications
 io.on("connection", (socket) => {
