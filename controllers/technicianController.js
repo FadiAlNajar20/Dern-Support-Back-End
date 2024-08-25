@@ -2,6 +2,23 @@ import { client } from "../server.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
+export const getTechnicainName = async (req, res) => {
+  const TechnicianId = req.userId;
+  try {
+    const result = await client.query(
+      `SELECT name FROM "User" WHERE Id= (
+      SELECT userid FROM Technician WHERE Id = $1
+      );`,
+      [TechnicianId]
+    );
+    
+    res.json(result.rows[0].name);
+  } catch (err) {
+    console.error("Get technician name error:", err);
+    res.status(500).json({ error: "Failed to get technician name" });
+  }
+};
+
 export const getCreatedDate = async (req, res) => {
   const TechnicianId = req.userId;
   try {
