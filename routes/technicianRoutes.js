@@ -7,7 +7,8 @@ import {
     updateCompletedRequest, 
     SendReport,
     GetSpecialization,
-    getCreatedDate 
+    getCreatedDate,
+    getTechnicainName
     } from "../controllers/technicianController.js";
     import { verifyToken } from "../middlewares/authMiddleware.js";
 
@@ -24,7 +25,7 @@ import {
     router.post("/send-report",verifyToken, SendReport);
     router.get("/specialization",verifyToken, GetSpecialization);
     router.get("/createdDate",verifyToken,getCreatedDate)
-
+    router.get("/name",verifyToken,getTechnicainName)
     export default router;
 
 
