@@ -105,6 +105,8 @@ router.get(
   adminController.getReportForRequest
 );
 
+
 router.get("/users/:id", verifyToken, adminController.getUserNameAndEmail);
+
 
 export default router;
