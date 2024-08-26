@@ -17,7 +17,7 @@ CREATE TABLE Technician (
     ID SERIAL PRIMARY KEY,
     UserID INT NOT NULL,
     Specialization VARCHAR,
-    Availability TIMESTAMP,
+    Availability TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (UserID) REFERENCES "User"(ID) ON DELETE CASCADE
 );
 
@@ -34,7 +34,7 @@ CREATE TABLE Request (
     TechnicianID INT NOT NULL,
     Status VARCHAR NOT NULL DEFAULT 'Pending',
     DeviceDeliveryMethod VARCHAR,
-    CreatedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CreatedDate DATE DEFAULT CURRENT_DATE,
     EstimatedTime TIMESTAMP,
     ActualTime TIMESTAMP,
     RequestType VARCHAR,
@@ -48,7 +48,7 @@ CREATE TABLE NewRequest (
     Title VARCHAR NOT NULL,
     Category VARCHAR NOT NULL,
     EstimatedCost DECIMAL (10, 2),
-    ActualCost DECIMAL (10, 2),
+    ActualCost DECIMAL (10, 2) DEFAULT 0.00,
     MaintenanceTime INT,
     Image VARCHAR,
     RequestID INT NOT NULL,
@@ -57,10 +57,10 @@ CREATE TABLE NewRequest (
 
 CREATE TABLE Service (
     ID SERIAL PRIMARY KEY,
-    CustomerID INT NOT NULL,
+    CustomerID INT,
     Title VARCHAR,
     Category VARCHAR,
-    ActualCost DECIMAL (10, 2),
+    ActualCost DECIMAL (10, 2) DEFAULT 0.00,
     MaintenanceTime INT,
     Image VARCHAR,
     IssueDescription VARCHAR,
