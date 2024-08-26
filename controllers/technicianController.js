@@ -114,6 +114,8 @@ export const technicianLogin = async (req, res) => {
       [Email]
     );
 
+    console.log(result);
+    
     // check if the technician is exist or not
     if (result.rows.length === 0) {
       return res.status(401).json({ error: "Technician not found :(" });
@@ -233,17 +235,95 @@ export const updateCompletedRequest = async (req, res) => {
 // technician/requests/assigned
 // Tested
 export const GetAssignedRequests = async (req, res) => {
-  const TechnicianId = req.userId;
-  try {
-    const result = await client.query(
-      `SELECT * FROM Request WHERE technicianid = $1;`,
-      [TechnicianId]
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error("Get assigned request error:", err);
-    res.status(500).json({ error: "Failed to get assigned request" });
-  }
+  // const TechnicianId = req.userId;
+  // try {
+  //   const result = await client.query(
+  //     `SELECT * FROM Request WHERE technicianid = $1;`,
+  //     [TechnicianId]
+  //   );
+  //   res.json(result.rows);
+  // } catch (err) {
+  //   console.error("Get assigned request error:", err);
+  //   res.status(500).json({ error: "Failed to get assigned request" });
+  // }
+    const TechnicianId = req.userId; // from middleware
+    try {
+      // select the Status, EstimatedTime, and RequestType from the Request table
+      const requestResult = await client.query(
+        `
+        SELECT ID, Status, CreatedDate, RequestType 
+        FROM Request 
+        WHERE TechnicianID = $1;
+      `,
+        [TechnicianId]
+      );
+  
+      //Store the response object
+      const requests = requestResult.rows;
+      
+      // THis array to store the final results and send it to frontend based on RequestType
+      const results = [];
+  
+      // Loop on each request to get more info(Title & ActualCost ) based on RequestType
+      for (const request of requests) {
+        
+        let detailResult; //to store more info
+        let feedbackId=null;
+        let serviceId;
+        //Case 1:
+        if (request.requesttype == "NewRequest") {
+          console.log("from new request" );
+          
+          // Fetch Title and ActualCost from NewRequest table
+          detailResult = await client.query(
+            `
+            SELECT Title, IssueDescription
+            FROM NewRequest 
+            WHERE RequestID = $1;
+          `,
+            [request.id]
+          );
+  
+          
+        }
+        //Case 2:
+        else {
+          // Fetch Title and ActualCost from Service table
+          detailResult = await client.query(
+            `
+            SELECT Title,IssueDescription
+            FROM Service 
+            WHERE ID = (
+              SELECT ServiceID 
+              FROM ServiceRequest 
+              WHERE RequestID = $1
+            );
+          `,
+            [request.id]
+          );
+          
+        }
+  
+        const hasData = detailResult && detailResult.rows.length > 0;
+          // Push the title and actual cost to the results array
+          console.log(detailResult);
+          
+          results.push({
+            id:request.id,
+            description:hasData?detailResult.rows[0].issuedescription:null,
+            status: request.status,
+            createddate: request.createddate,
+            requestType: request.requesttype,
+            title:  hasData? detailResult.rows[0].title:null,
+          });
+      }
+  
+      // Send the final results to the technician
+      res.status(200).json(results);
+    } catch (error) {
+      console.error("Error executing query", error.stack);
+      res.status(500).json({ error: "Internal server error" });
+    }
 };
 
 //=============================/technician/send-report========================================
