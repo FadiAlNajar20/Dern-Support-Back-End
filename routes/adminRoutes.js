@@ -102,6 +102,6 @@ router.post(
 router.get('/reports/request/:id', verifyToken, adminController.getReportForRequest);
 router.get('/reports', verifyToken, adminController.getAllReportDetails);
 
-router.get('/users/:id',verifyToken,adminController.getUser)
+//router.get('/users/:id',verifyToken,adminController.getUser)
 
 export default router;
