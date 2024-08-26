@@ -508,7 +508,7 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
     );
 
     io.emit("newRequest", {
-      userType:"customers",
+      role: "customer",  
       id: uuidv4(),
       message: "Your order has been successfully scheduled. Go to the information page to see the status of your order",
     });
