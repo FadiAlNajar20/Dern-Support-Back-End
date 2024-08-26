@@ -30,10 +30,10 @@ export const getCreatedDate = async (req, res) => {
   const TechnicianId = req.userId;
   try {
     const result = await client.query(
-      `SELECT * FROM technician WHERE Id= $1;`,
+      `SELECT createddate FROM technician WHERE Id= $1;`,
       [TechnicianId]
     );
-    res.json(result.rows[0].createdAt);
+    res.json(result.rows[0].createddate);
   } catch (err) {
     console.error("Get createddate error:", err);
     res.status(500).json({ error: "Failed to get createddate" });
@@ -178,6 +178,8 @@ export const updateAssignedRequest = async (req, res) => {
   //if it is NewRequest send MaintenanceTime
   //if it is ServiceRequest get MaintenanceTime from service table
   let { MaintenanceTime, RequestId } = req.body;
+  console.log("mintinase time &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"+MaintenanceTime);
+  
   try {
     let result1 = await client.query(
       `SELECT RequestType FROM Request WHERE id= $1`,
@@ -192,6 +194,17 @@ export const updateAssignedRequest = async (req, res) => {
         [RequestId]
       );
       MaintenanceTime = result1.rows[0].maintenancetime;
+    }
+    else{
+
+      
+        result1 = await client.query(
+          `update newrequest  
+          set MaintenanceTime=$1
+            WHERE RequestID = $2;`,
+           [MaintenanceTime,RequestId]
+        );
+     
     }
 
     //  Update technician's availability after updating request by technician

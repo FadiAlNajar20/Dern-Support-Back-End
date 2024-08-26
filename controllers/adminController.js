@@ -119,7 +119,7 @@ export const getAllRequests = async (req, res) => {
   //  LEFT JOIN newrequest ON request.id = newrequest.requestid;`;
 
 const sql = `
-SELECT  request.id, "User".name, "User".email, "User".phonenumber,
+SELECT  request.id, "User".name, "User".email, "User".phonenumber,request.customerId,
 request.status, request.devicedeliverymethod, request.createddate, request.requesttype, request.actualtime, request.estimatedtime,
 newrequest.issuedescription, newrequest.title, newrequest.category, newrequest.estimatedcost, newrequest.maintenancetime, newrequest.image, newrequest.actualcost
 FROM request
