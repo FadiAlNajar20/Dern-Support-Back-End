@@ -117,25 +117,28 @@ export const getAllRequests = async (req, res) => {
   // const sql = `SELECT *
   //  FROM request
   //  LEFT JOIN newrequest ON request.id = newrequest.requestid;`;
+ 
+      const sql = `
+      SELECT  request.id, "User".name, "User".email, "User".phonenumber,request.customerId,
+      request.status, request.devicedeliverymethod, request.createddate, request.requesttype, request.actualtime, request.estimatedtime,
+      newrequest.issuedescription, newrequest.title, newrequest.category, newrequest.estimatedcost, newrequest.maintenancetime, newrequest.image, newrequest.actualcost
+      FROM request
+      LEFT JOIN newrequest ON request.id = newrequest.requestid
+      LEFT JOIN customer ON request.customerId = customer.id
+      LEFT JOIN "User" ON customer.userId = "User".id
+      WHERE request.requesttype = 'NewRequest';
+      `;
 
-  const sql = `
-SELECT  request.id, "User".name, "User".email, "User".phonenumber,request.customerId,
-request.status, request.devicedeliverymethod, request.createddate, request.requesttype, request.actualtime, request.estimatedtime,
-newrequest.issuedescription, newrequest.title, newrequest.category, newrequest.estimatedcost, newrequest.maintenancetime, newrequest.image, newrequest.actualcost
-FROM request
-LEFT JOIN newrequest ON request.id = newrequest.requestid
-LEFT JOIN customer ON request.customerId = customer.id
-LEFT JOIN "User" ON customer.userId = "User".id;
-`;
+      try {
+        const result = await client.query(sql);
+        console.log("QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQq ", result);
+        res.json(result.rows);
+      } catch (err) {
+        console.error("Get all requests error:", err);
+        res.status(500).json({ error: "Failed to fetch requests" });
+      }
 
-  try {
-    const result = await client.query(sql);
-    res.json(result.rows);
-  } catch (err) {
-    console.error("Get all requests error:", err);
-    res.status(500).json({ error: "Failed to fetch requests" });
-  }
-};
+}
 
 //=============================/admin/support-requests/requestsPerDay========================================
 // /admin/support-requests/requestsPerDay
