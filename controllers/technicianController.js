@@ -130,8 +130,6 @@ export const technicianLogin = async (req, res) => {
     );
   
     
-
-    console.log(result);
     
     // check if the technician is exist or not
     if (result.rows.length === 0) {
@@ -140,7 +138,6 @@ export const technicianLogin = async (req, res) => {
 
     const { password } = result.rows[0];
     const isMatch = await bcrypt.compare(Password, password);
-    console.log(password, Email, Password);
 
     //Check if the password matches the password stored in the database
     if (!isMatch) {
@@ -177,9 +174,7 @@ export const updateAssignedRequest = async (req, res) => {
   const TechnicianId = req.userId;
   //if it is NewRequest send MaintenanceTime
   //if it is ServiceRequest get MaintenanceTime from service table
-  let { MaintenanceTime, RequestId } = req.body;
-  console.log("mintinase time &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"+MaintenanceTime);
-  
+  let { MaintenanceTime, RequestId } = req.body;  
   try {
     let result1 = await client.query(
       `SELECT RequestType FROM Request WHERE id= $1`,
@@ -302,7 +297,6 @@ export const GetAssignedRequests = async (req, res) => {
         let serviceId;
         //Case 1:
         if (request.requesttype == "NewRequest") {
-          console.log("from new request" );
           
           // Fetch Title and ActualCost from NewRequest table
           detailResult = await client.query(
@@ -321,7 +315,7 @@ export const GetAssignedRequests = async (req, res) => {
           // Fetch Title and ActualCost from Service table
           detailResult = await client.query(
             `
-            SELECT Title,IssueDescription
+            SELECT Title, IssueDescription
             FROM Service 
             WHERE ID = (
               SELECT ServiceID 
@@ -336,16 +330,23 @@ export const GetAssignedRequests = async (req, res) => {
   
         const hasData = detailResult && detailResult.rows.length > 0;
           // Push the title and actual cost to the results array
-          console.log(detailResult);
           
+          // results.push({
+          //   id:request.id,
+          //   description:hasData?detailResult.rows[0].issuedescription:null,
+          //   status: request.status,
+          //   createddate: request.createddate,
+          //   requestType: request.requesttype,
+          //   title:  hasData? detailResult.rows[0].title:null,
+          // });
           results.push({
-            id:request.id,
-            description:hasData?detailResult.rows[0].issuedescription:null,
+            id: request.id,
+            description: hasData ? detailResult.rows[0].issuedescription : null,
             status: request.status,
             createddate: request.createddate,
             requestType: request.requesttype,
-            title:  hasData? detailResult.rows[0].title:null,
-          });
+            title: hasData ? detailResult.rows[0].title : null,
+        });
       }
   
       // Send the final results to the technician

@@ -114,11 +114,11 @@ export const getAllRequests = async (req, res) => {
   const id = req.userId;
   console.log(id, " ");
 
- // const sql = `SELECT *
- //  FROM request
+  // const sql = `SELECT *
+  //  FROM request
   //  LEFT JOIN newrequest ON request.id = newrequest.requestid;`;
 
-const sql = `
+  const sql = `
 SELECT  request.id, "User".name, "User".email, "User".phonenumber,request.customerId,
 request.status, request.devicedeliverymethod, request.createddate, request.requesttype, request.actualtime, request.estimatedtime,
 newrequest.issuedescription, newrequest.title, newrequest.category, newrequest.estimatedcost, newrequest.maintenancetime, newrequest.image, newrequest.actualcost
@@ -127,8 +127,6 @@ LEFT JOIN newrequest ON request.id = newrequest.requestid
 LEFT JOIN customer ON request.customerId = customer.id
 LEFT JOIN "User" ON customer.userId = "User".id;
 `;
-
-
 
   try {
     const result = await client.query(sql);
@@ -435,31 +433,82 @@ export const addService = async (req, res) => {
     imgUrl = `${filename}`;
   }
 
-  const sql = `INSERT INTO Service (customerId, title, category, actualcost, maintenanceTime, image, isCommon, issueDescription) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id;`;
+  // const sql = `INSERT INTO Service (customerId, title, category, actualcost, maintenanceTime, image, isCommon, issueDescription) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id;`;
 
-  const values = [
-    customerId,
-    title,
-    category,
-    actualcost,
-    maintenanceTime,
-    imgUrl,
-    isCommon,
-    issueDescription,
-  ];
+  // const values = [
+  //   customerId,
+  //   title,
+  //   category,
+  //   actualcost,
+  //   maintenanceTime,
+  //   imgUrl,
+  //   isCommon,
+  //   issueDescription,
+  // ];
 
   try {
-    const fetchCustomer = await client.query(
-      `SELECT * FROM Customer WHERE userid = $1`,
+    //   const fetchCustomer = await client.query(
+    //     `SELECT * FROM Customer WHERE userid = $1`,
+    //     [customerId]
+    //   );
+
+    //   if (fetchCustomer.rowCount > 0) {
+    //     const result = await client.query(sql, values);
+    //     res.json({ message: "Service added", serviceId: result.rows[0].id });
+    //   } else {
+    //     res.json({ message: "Customer not found" });
+    //   }
+    console.log('customerId: '+customerId+' /^/^/^/^/^/^/^/^/^/^/^/^/^/^');
+    
+    //step 1: change RequestType of the request into "ServiceRequest"
+    const changeRequestType = await client.query(
+      `update Request set RequestType='ServiceRequest' 
+      WHERE CustomerID = $1 RETURNING ID;`,
       [customerId]
     );
+    console.log('changeRequestType.rows[0]: '+changeRequestType.rows[0])
+    const requestId = changeRequestType.rows[0].id;
 
-    if (fetchCustomer.rowCount > 0) {
-      const result = await client.query(sql, values);
-      res.json({ message: "Service added", serviceId: result.rows[0].id });
-    } else {
-      res.json({ message: "Customer not found" });
-    }
+    console.log('requestId: '+requestId+'  &^&^&^&^&^&^&^&^&^&^&^&^&^&^');
+    
+
+    // step 2: add new request to service
+    const sql = `INSERT INTO Service (customerId, title, category, actualcost, maintenanceTime, image, isCommon, issueDescription)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id;`;
+
+    const values = [
+      customerId,
+      title,
+      category,
+      actualcost,
+      maintenanceTime,
+      imgUrl,
+      isCommon,
+      issueDescription,
+    ];
+
+    const result = await client.query(sql, values);
+
+    // step 3: add the service into ServiceRequest table
+    const serviceId = result.rows[0].id;
+    console.log('serviceId: '+serviceId+'  *^*^*^*^*^*^*^*^*^*^*^*^*^*^');
+
+    await client.query(
+      `insert into ServiceRequest (ServiceID, RequestID)
+       values($1,$2)
+      `,
+      [serviceId, requestId]
+    );
+
+    //step 4: delete the new request
+    await client.query(
+      `
+        DELETE FROM NewRequest
+        WHERE RequestID = $1;
+      `,
+      [requestId]
+    );
+    res.json({ message: "Service added successfully", spare: result.rows[0] });
   } catch (err) {
     console.error("Add service error:", err);
     res.status(500).json({ error: "Failed to add service" });
