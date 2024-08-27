@@ -434,32 +434,76 @@ export const addService = async (req, res) => {
     console.log(filename);
     imgUrl = `${filename}`;
   }
-
-  const sql = `INSERT INTO Service (customerId, title, category, actualcost, maintenanceTime, image, isCommon, issueDescription) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id;`;
-
-  const values = [
-    customerId,
-    title,
-    category,
-    actualcost,
-    maintenanceTime,
-    imgUrl,
-    isCommon,
-    issueDescription,
-  ];
-
+ 
+  // const sql = `INSERT INTO Service (customerId, title, category, actualcost, maintenanceTime, image, isCommon, issueDescription) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id;`;
+ 
+  // const values = [
+  //   customerId,
+  //   title,
+  //   category,
+  //   actualcost,
+  //   maintenanceTime,
+  //   imgUrl,
+  //   isCommon,
+  //   issueDescription,
+  // ];
+ 
   try {
-    const fetchCustomer = await client.query(
-      `SELECT * FROM Customer WHERE userid = $1`,
+    //   const fetchCustomer = await client.query(
+    //     `SELECT * FROM Customer WHERE userid = $1`,
+    //     [customerId]
+    //   );
+ 
+    //   if (fetchCustomer.rowCount > 0) {
+    //     const result = await client.query(sql, values);
+    //     res.json({ message: "Service added", serviceId: result.rows[0].id });
+    //   } else {
+    //     res.json({ message: "Customer not found" });
+    //   }
+ 
+    //step 1: change RequestType of the request into "ServiceRequest"
+    const changeRequestType = await client.query(
+      `update Request set  RequestType='ServiceRequest'
+      WHERE customerid = $1 RETURNING id;`,
       [customerId]
     );
-
-    if (fetchCustomer.rowCount > 0) {
-      const result = await client.query(sql, values);
-      res.json({ message: "Service added", serviceId: result.rows[0].id });
-    } else {
-      res.json({ message: "Customer not found" });
-    }
+ 
+    // step 2: add new request to service
+    const sql = `INSERT INTO Service (customerId, title, category, actualcost, maintenanceTime, image, isCommon, issueDescription)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id;`;
+ 
+    const values = [
+      customerId,
+      title,
+      category,
+      actualcost,
+      maintenanceTime,
+      imgUrl,
+      isCommon,
+      issueDescription,
+    ];
+ 
+    const result = await client.query(sql, values);
+ 
+    // step 3: add the service into ServiceRequest table
+    const serviceId = result.rows[0].id;
+    const requestId = changeRequestType.rows[0].id;
+    await client.query(
+      `insert into ServiceRequest (ServiceID, RequestID)
+       values($1,$2)
+      `,
+      [serviceId, requestId]
+    );
+ 
+    //step 4: delete the new request
+    // await client.query(
+    //   `
+    //     DELETE FROM NewRequest
+    //     WHERE RequestID = $1;
+    //   `,
+    //   [requestId]
+    // );
+    res.json({message: "add succsessfully"});
   } catch (err) {
     console.error("Add service error:", err);
     res.status(500).json({ error: "Failed to add service" });

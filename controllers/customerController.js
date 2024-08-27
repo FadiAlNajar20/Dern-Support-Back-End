@@ -372,7 +372,8 @@ export const customerGetAllRequests = async (req, res) => {
 
     // Loop on each request to get more info(Title & ActualCost ) based on RequestType
     for (const request of requests) {
-      
+console.log(request.id+"********************************");
+
       let detailResult; //to store more info
       let feedbackId=null;
       let serviceId;
@@ -393,31 +394,34 @@ export const customerGetAllRequests = async (req, res) => {
         
       }
       //Case 2:
-      else if (request.requesttype == "ServiceRequest") {
-        // Fetch Title and ActualCost from Service table
-        detailResult = await client.query(
-          `
-          SELECT Title, ActualCost,ID 
-          FROM Service 
-          WHERE ID = (
-            SELECT ServiceID 
-            FROM ServiceRequest 
-            WHERE RequestID = $1
-          );
-        `,
-          [request.id]
-        );
+      
+      // else if (request.requesttype == "ServiceRequest") {
+      //   // Fetch Title and ActualCost from Service table
+      //   console.log("enter srivec???????????????????????????????????????????????????????????????????");
         
-        serviceId= detailResult.rows[0].id;
+      //   detailResult = await client.query(
+      //     `
+      //     SELECT  id, Title, ActualCost
+      //     FROM Service 
+      //     WHERE ID = (
+      //       SELECT ServiceID 
+      //       FROM ServiceRequest 
+      //       WHERE RequestID = $1
+      //     );
+      //   `,
+      //     [request.id]
+      //   );
+        
+      //   serviceId= detailResult.rows[0].id;
 
-        feedbackId=(await client.query(`
-          SELECT ID 
-          FROM Feedback
-          WHERE ServiceID = $1;
-          `,[serviceId]))?.rows[0]?.id;
-      }
+      //   feedbackId=(await client.query(`
+      //     SELECT ID 
+      //     FROM Feedback
+      //     WHERE ServiceID = $1;
+      //     `,[serviceId]))?.rows[0]?.id;
+      // }
 
-      console.log(detailResult);
+     // console.log(detailResult);
       const hasData = detailResult && detailResult.rows.length > 0;
         // Push the title and actual cost to the results array
         
