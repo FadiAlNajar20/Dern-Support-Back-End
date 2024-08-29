@@ -37,10 +37,10 @@ export const assignTechnician = async (requestCategory) => {
     //   [technicianId, requestId]
     // );
     io.emit("newRequest", {
-      userType:"technician",
+      role: "technician",  
       id: uuidv4(),
-     Message: "Your order has been successfully scheduled. Go to the information page to see the status of your order."
-     });
+      message: "A new request has been submitted by the customer. Please review the order log."
+    });
     
     return technicianId;
     

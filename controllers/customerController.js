@@ -236,6 +236,7 @@ export const customerGetEstimatedTimeAndCost = async (req, res) => {
       EstimatedTime: estimatedCompletionTime,
       EstimatedCost: estimatedCost,
     });
+  
 
     
   } catch (error) {
@@ -395,31 +396,31 @@ console.log(request.id+"********************************");
       }
       //Case 2:
       
-      // else if (request.requesttype == "ServiceRequest") {
-      //   // Fetch Title and ActualCost from Service table
-      //   console.log("enter srivec???????????????????????????????????????????????????????????????????");
+      else if (request.requesttype == "ServiceRequest") {
+        // Fetch Title and ActualCost from Service table
+        console.log("enter srivec???????????????????????????????????????????????????????????????????");
         
-      //   detailResult = await client.query(
-      //     `
-      //     SELECT  id, Title, ActualCost
-      //     FROM Service 
-      //     WHERE ID = (
-      //       SELECT ServiceID 
-      //       FROM ServiceRequest 
-      //       WHERE RequestID = $1
-      //     );
-      //   `,
-      //     [request.id]
-      //   );
+        detailResult = await client.query(
+          `
+          SELECT  id, Title, ActualCost
+          FROM Service 
+          WHERE ID = (
+            SELECT ServiceID 
+            FROM ServiceRequest 
+            WHERE RequestID = $1
+          );
+        `,
+          [request.id]
+        );
         
-      //   serviceId= detailResult.rows[0].id;
+        serviceId= detailResult.rows[0].id;
 
-      //   feedbackId=(await client.query(`
-      //     SELECT ID 
-      //     FROM Feedback
-      //     WHERE ServiceID = $1;
-      //     `,[serviceId]))?.rows[0]?.id;
-      // }
+        feedbackId=(await client.query(`
+          SELECT ID 
+          FROM Feedback
+          WHERE ServiceID = $1;
+          `,[serviceId]))?.rows[0]?.id;
+      }
 
      // console.log(detailResult);
       const hasData = detailResult && detailResult.rows.length > 0;
@@ -515,6 +516,12 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
       role: "customer",  
       id: uuidv4(),
       message: "Your order has been successfully scheduled. Go to the information page to see the status of your order",
+    });
+    
+    io.emit("newRequest", {
+      role: "admin",  
+      id: uuidv4(),
+      message: "A new request has been submitted by the customer. Please review the order log."
     });
       
     res.status(201).json({ message: "Request submitted" });

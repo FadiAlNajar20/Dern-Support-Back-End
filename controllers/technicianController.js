@@ -3,11 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { io } from "../server.js";
 import { v4 as uuidv4 } from "uuid";
-// io.emit("newRequest", {
-//   userType:"customers",
-//   id: uuidv4(),
-//   message: "Your order has been successfully scheduled. Go to the information page to see the status of your order",
-// });
+
 
 export const getTechnicainName = async (req, res) => {
   const TechnicianId = req.userId;
@@ -130,8 +126,6 @@ export const technicianLogin = async (req, res) => {
     );
   
     
-
-    console.log(result);
     
     // check if the technician is exist or not
     if (result.rows.length === 0) {
@@ -140,7 +134,6 @@ export const technicianLogin = async (req, res) => {
 
     const { password } = result.rows[0];
     const isMatch = await bcrypt.compare(Password, password);
-    console.log(password, Email, Password);
 
     //Check if the password matches the password stored in the database
     if (!isMatch) {
@@ -177,9 +170,7 @@ export const updateAssignedRequest = async (req, res) => {
   const TechnicianId = req.userId;
   //if it is NewRequest send MaintenanceTime
   //if it is ServiceRequest get MaintenanceTime from service table
-  let { MaintenanceTime, RequestId } = req.body;
-  console.log("mintinase time &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"+MaintenanceTime);
-  
+  let { MaintenanceTime, RequestId } = req.body;  
   try {
     let result1 = await client.query(
       `SELECT RequestType FROM Request WHERE id= $1`,
@@ -222,6 +213,17 @@ export const updateAssignedRequest = async (req, res) => {
       message: "Request Updated Successfully",
       request: result.rows[0],
     });
+    io.emit("newRequest", {
+      role: "admin",  
+      id: uuidv4(),
+      message: " Request has been Update by the technician. Please review the order log."
+    });
+    io.emit("newRequest", {
+      role: "customers",  
+      id: uuidv4(),
+      message: " Request has been Update by the technician. Please review your requests."
+    });
+    
   } catch (err) {
     console.error("Update Request error:", err);
     res.status(500).json({ error: "Failed to update Request" });
@@ -255,6 +257,16 @@ export const updateCompletedRequest = async (req, res) => {
     res.json({
       message: "Request Updated Successfully",
       request: result.rows[0],
+    });
+    io.emit("newRequest", {
+      role: "admin",  
+      id: uuidv4(),
+      message: " Request has been Updated by the technician. Please review the order log."
+    });
+    io.emit("newRequest", {
+      role: "customers",  
+      id: uuidv4(),
+      message: " Request has been Updated by the technician. Please review your requests."
     });
   } catch (err) {
     console.error("Update Request error:", err);
@@ -302,7 +314,6 @@ export const GetAssignedRequests = async (req, res) => {
         let serviceId;
         //Case 1:
         if (request.requesttype == "NewRequest") {
-          console.log("from new request" );
           
           // Fetch Title and ActualCost from NewRequest table
           detailResult = await client.query(
@@ -321,7 +332,7 @@ export const GetAssignedRequests = async (req, res) => {
           // Fetch Title and ActualCost from Service table
           detailResult = await client.query(
             `
-            SELECT Title,IssueDescription
+            SELECT Title, IssueDescription
             FROM Service 
             WHERE ID = (
               SELECT ServiceID 
@@ -336,16 +347,23 @@ export const GetAssignedRequests = async (req, res) => {
   
         const hasData = detailResult && detailResult.rows.length > 0;
           // Push the title and actual cost to the results array
-          console.log(detailResult);
           
+          // results.push({
+          //   id:request.id,
+          //   description:hasData?detailResult.rows[0].issuedescription:null,
+          //   status: request.status,
+          //   createddate: request.createddate,
+          //   requestType: request.requesttype,
+          //   title:  hasData? detailResult.rows[0].title:null,
+          // });
           results.push({
-            id:request.id,
-            description:hasData?detailResult.rows[0].issuedescription:null,
+            id: request.id,
+            description: hasData ? detailResult.rows[0].issuedescription : null,
             status: request.status,
             createddate: request.createddate,
             requestType: request.requesttype,
-            title:  hasData? detailResult.rows[0].title:null,
-          });
+            title: hasData ? detailResult.rows[0].title : null,
+        });
       }
   
       // Send the final results to the technician
@@ -385,6 +403,12 @@ export const SendReport = async (req, res) => {
       }
     }
     res.json({ message: "Report Sent Successfully" });
+    io.emit("newRequest", {
+      role: "admin",  
+      id: uuidv4(),
+      message: " Report has been Sended by the technician. Please review the Reports log."
+    });
+ 
   } catch (err) {
     console.error("Send report error:", err);
     res.status(500).json({ error: "Failed to send report" });
