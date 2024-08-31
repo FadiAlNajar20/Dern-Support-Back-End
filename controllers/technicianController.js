@@ -3,11 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { io } from "../server.js";
 import { v4 as uuidv4 } from "uuid";
-// io.emit("newRequest", {
-//   userType:"customers",
-//   id: uuidv4(),
-//   message: "Your order has been successfully scheduled. Go to the information page to see the status of your order",
-// });
+
 
 export const getTechnicainName = async (req, res) => {
   const TechnicianId = req.userId;
@@ -217,6 +213,17 @@ export const updateAssignedRequest = async (req, res) => {
       message: "Request Updated Successfully",
       request: result.rows[0],
     });
+    io.emit("newRequest", {
+      role: "admin",  
+      id: uuidv4(),
+      message: " Request has been Update by the technician. Please review the order log."
+    });
+    io.emit("newRequest", {
+      role: "customers",  
+      id: uuidv4(),
+      message: " Request has been Update by the technician. Please review your requests."
+    });
+    
   } catch (err) {
     console.error("Update Request error:", err);
     res.status(500).json({ error: "Failed to update Request" });
@@ -250,6 +257,16 @@ export const updateCompletedRequest = async (req, res) => {
     res.json({
       message: "Request Updated Successfully",
       request: result.rows[0],
+    });
+    io.emit("newRequest", {
+      role: "admin",  
+      id: uuidv4(),
+      message: " Request has been Updated by the technician. Please review the order log."
+    });
+    io.emit("newRequest", {
+      role: "customers",  
+      id: uuidv4(),
+      message: " Request has been Updated by the technician. Please review your requests."
     });
   } catch (err) {
     console.error("Update Request error:", err);
@@ -386,6 +403,12 @@ export const SendReport = async (req, res) => {
       }
     }
     res.json({ message: "Report Sent Successfully" });
+    io.emit("newRequest", {
+      role: "admin",  
+      id: uuidv4(),
+      message: " Report has been Sended by the technician. Please review the Reports log."
+    });
+ 
   } catch (err) {
     console.error("Send report error:", err);
     res.status(500).json({ error: "Failed to send report" });

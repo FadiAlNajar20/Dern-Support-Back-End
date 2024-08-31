@@ -234,6 +234,9 @@ export const customerGetEstimatedTimeAndCost = async (req, res) => {
       EstimatedTime: estimatedCompletionTime,
       EstimatedCost: estimatedCost,
     });
+  
+
+    
   } catch (error) {
     console.error("Error executing query", error.stack);
     res.status(500).json({ error: "Internal server error" });
@@ -298,12 +301,18 @@ export const customerSendServiceRequest = async (req, res) => {
       UPDATE Service
       SET UsageTime = UsageTime + 1
       WHERE id = $1;
+      WHERE id = $1;
     `,
       [ServiceID]
     );
     await client.query("COMMIT"); //FROM Tabnine Ai
 
     res.status(201).json({ message: "Service requested" });
+    io.emit("newRequest", {
+      role: "customers",  
+      id: uuidv4(),
+      message: "Your order has been successfully scheduled. Go to the AllRequests page  to see the status of your order",
+    });
   } catch (error) {
     await client.query("ROLLBACK"); //FROM Tabnine Ai
     console.error("Error executing query", error.stack);
@@ -367,6 +376,8 @@ export const customerGetAllRequests = async (req, res) => {
 
     // Loop on each request to get more info(Title & ActualCost ) based on RequestType
     for (const request of requests) {
+
+
       let detailResult; //to store more info
       let feedbackId = null;
       let serviceId;
@@ -385,11 +396,14 @@ export const customerGetAllRequests = async (req, res) => {
         );
       }
       //Case 2:
+      
       else if (request.requesttype == "ServiceRequest") {
         // Fetch Title and ActualCost from Service table
+
+        
         detailResult = await client.query(
           `
-          SELECT Title, ActualCost,ID 
+          SELECT  id, Title, ActualCost
           FROM Service 
           WHERE ID = (
             SELECT ServiceID 
@@ -414,7 +428,7 @@ export const customerGetAllRequests = async (req, res) => {
         )?.rows[0]?.id;
       }
 
-      console.log(detailResult);
+     // console.log(detailResult);
       const hasData = detailResult && detailResult.rows.length > 0;
       // Push the title and actual cost to the results array
 
@@ -504,11 +518,19 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
     );
 
     io.emit("newRequest", {
+      role: "customers",  
       role: "customer",
       id: uuidv4(),
       message:
         "Your order has been successfully scheduled. Go to the information page to see the status of your order",
     });
+    
+    io.emit("newRequest", {
+      role: "admin",  
+      id: uuidv4(),
+      message: "A new request has been submitted by the customer. Please review the order log."
+    });
+      
 
     res.status(201).json({ message: "Request submitted" });
 
