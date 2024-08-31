@@ -302,13 +302,18 @@ export const customerSendServiceRequest = async (req, res) => {
       `
       UPDATE Service
       SET UsageTime = UsageTime + 1
-      WHERE ServiceID = $1;
+      WHERE id = $1;
     `,
       [ServiceID]
     );
     await client.query("COMMIT"); //FROM Tabnine Ai
 
     res.status(201).json({ message: "Service requested" });
+    io.emit("newRequest", {
+      role: "customers",  
+      id: uuidv4(),
+      message: "Your order has been successfully scheduled. Go to the AllRequests page  to see the status of your order",
+    });
   } catch (error) {
     await client.query("ROLLBACK"); //FROM Tabnine Ai
     console.error("Error executing query", error.stack);
@@ -373,7 +378,7 @@ export const customerGetAllRequests = async (req, res) => {
 
     // Loop on each request to get more info(Title & ActualCost ) based on RequestType
     for (const request of requests) {
-console.log(request.id+"********************************");
+
 
       let detailResult; //to store more info
       let feedbackId=null;
@@ -398,7 +403,7 @@ console.log(request.id+"********************************");
       
       else if (request.requesttype == "ServiceRequest") {
         // Fetch Title and ActualCost from Service table
-        console.log("enter srivec???????????????????????????????????????????????????????????????????");
+
         
         detailResult = await client.query(
           `
@@ -513,7 +518,7 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
     );
 
     io.emit("newRequest", {
-      role: "customer",  
+      role: "customers",  
       id: uuidv4(),
       message: "Your order has been successfully scheduled. Go to the information page to see the status of your order",
     });
