@@ -10,7 +10,6 @@ import {
   generateEstimates,
 } from "../helper/helperMethods.js";
 
-
 export const testIo = async (req, res) => {
   console.log("Request received");
 
@@ -160,7 +159,6 @@ export const customerSignup = async (req, res) => {
 export const customerLogin = async (req, res) => {
   const { Email, Password } = req.body;
 
-
   //all field required
   if (!Email || !Password) {
     return res.status(400).json({ error: "Email and Password are required" });
@@ -250,7 +248,7 @@ export const customerGetEstimatedTimeAndCost = async (req, res) => {
 //Tested
 export const customerSendServiceRequest = async (req, res) => {
   const CustomerID = req.userId; //form authMiddleware
-  
+
   //console.log(CustomerID);
   const { ServiceID, Method } = req.body;
 
@@ -303,6 +301,7 @@ export const customerSendServiceRequest = async (req, res) => {
       UPDATE Service
       SET UsageTime = UsageTime + 1
       WHERE id = $1;
+      WHERE id = $1;
     `,
       [ServiceID]
     );
@@ -326,7 +325,6 @@ export const customerSendServiceRequest = async (req, res) => {
 //Tested
 export const customerSendFeedback = async (req, res) => {
   const CustomerID = req.userId; //form authMiddleware
-
 
   const { ServiceID, Rating, Comment } = req.body;
 
@@ -372,7 +370,7 @@ export const customerGetAllRequests = async (req, res) => {
 
     //Store the response object
     const requests = requestResult.rows;
-    
+
     // THis array to store the final results and send it to frontend based on RequestType
     const results = [];
 
@@ -381,12 +379,12 @@ export const customerGetAllRequests = async (req, res) => {
 
 
       let detailResult; //to store more info
-      let feedbackId=null;
+      let feedbackId = null;
       let serviceId;
       //Case 1:
       if (request.requesttype == "NewRequest") {
-        console.log("from new request" );
-        
+        console.log("from new request");
+
         // Fetch Title and ActualCost from NewRequest table
         detailResult = await client.query(
           `
@@ -396,8 +394,6 @@ export const customerGetAllRequests = async (req, res) => {
         `,
           [request.id]
         );
-
-        
       }
       //Case 2:
       
@@ -417,30 +413,35 @@ export const customerGetAllRequests = async (req, res) => {
         `,
           [request.id]
         );
-        
-        serviceId= detailResult.rows[0].id;
 
-        feedbackId=(await client.query(`
+        serviceId = detailResult.rows[0].id;
+
+        feedbackId = (
+          await client.query(
+            `
           SELECT ID 
           FROM Feedback
           WHERE ServiceID = $1;
-          `,[serviceId]))?.rows[0]?.id;
+          `,
+            [serviceId]
+          )
+        )?.rows[0]?.id;
       }
 
      // console.log(detailResult);
       const hasData = detailResult && detailResult.rows.length > 0;
-        // Push the title and actual cost to the results array
-        
-        results.push({
-          id:request.id,
-          feedbackId:feedbackId,
-          serviceId:serviceId,
-          status: request.status,
-          estimatedTime: request.estimatedtime,
-          requestType: request.requesttype,
-          title:  hasData? detailResult.rows[0].title:null,
-          actualCost: hasData?detailResult.rows[0].actualcost:null,
-        });
+      // Push the title and actual cost to the results array
+
+      results.push({
+        id: request.id,
+        feedbackId: feedbackId,
+        serviceId: serviceId,
+        status: request.status,
+        estimatedTime: request.estimatedtime,
+        requestType: request.requesttype,
+        title: hasData ? detailResult.rows[0].title : null,
+        actualCost: hasData ? detailResult.rows[0].actualcost : null,
+      });
     }
 
     // Send the final results to the client
@@ -455,10 +456,9 @@ export const customerGetAllRequests = async (req, res) => {
 // /customers/final-approval-support-request
 //Tested
 export const customerSenApprovedSupportRequest = async (req, res) => {
-  
   console.log(req.body);
   const CustomerID = req.userId;
- 
+
   console.log(CustomerID);
   const { Description, DeviceDeliveryMethod, Title, Category } = req.body;
   // TODO: CALL assign function From L
@@ -519,8 +519,10 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
 
     io.emit("newRequest", {
       role: "customers",  
+      role: "customer",
       id: uuidv4(),
-      message: "Your order has been successfully scheduled. Go to the information page to see the status of your order",
+      message:
+        "Your order has been successfully scheduled. Go to the information page to see the status of your order",
     });
     
     io.emit("newRequest", {
@@ -529,6 +531,7 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
       message: "A new request has been submitted by the customer. Please review the order log."
     });
       
+
     res.status(201).json({ message: "Request submitted" });
 
     //res.status(201).json({ message: "Request submitted" });
