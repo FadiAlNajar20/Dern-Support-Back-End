@@ -11,10 +11,8 @@ import {
 } from "../helper/helperMethods.js";
 
 export const testIo = async (req, res) => {
-  console.log("Request received");
 
   const body = req.body;
-  console.log(body);
 
   // create an idintity id  for each notification
   const notificationId = uuidv4();
@@ -224,7 +222,7 @@ export const customerLogout = (req, res) => {
 // /customers/get-estimated-time-cost TODO: GET
 //Tested
 export const customerGetEstimatedTimeAndCost = async (req, res) => {
-  console.log(req.body);
+
   const { Category } = req.body;
   try {
     const { estimatedCost, estimatedCompletionTime } = await generateEstimates(
@@ -249,7 +247,7 @@ export const customerGetEstimatedTimeAndCost = async (req, res) => {
 export const customerSendServiceRequest = async (req, res) => {
   const CustomerID = req.userId; //form authMiddleware
 
-  //console.log(CustomerID);
+
   const { ServiceID, Method } = req.body;
 
   //all field required
@@ -370,21 +368,20 @@ export const customerGetAllRequests = async (req, res) => {
 
     //Store the response object
     const requests = requestResult.rows;
-
+    
     // THis array to store the final results and send it to frontend based on RequestType
     const results = [];
 
     // Loop on each request to get more info(Title & ActualCost ) based on RequestType
     for (const request of requests) {
-
-
+      
       let detailResult; //to store more info
-      let feedbackId = null;
+      let feedbackId=null;
       let serviceId;
       //Case 1:
       if (request.requesttype == "NewRequest") {
-        console.log("from new request");
-
+  
+        
         // Fetch Title and ActualCost from NewRequest table
         detailResult = await client.query(
           `
@@ -394,16 +391,17 @@ export const customerGetAllRequests = async (req, res) => {
         `,
           [request.id]
         );
+
+      //  console.log(request.id+"?????????????????????????????????????");
+        
       }
       //Case 2:
-      
       else if (request.requesttype == "ServiceRequest") {
+     
         // Fetch Title and ActualCost from Service table
-
-        
         detailResult = await client.query(
           `
-          SELECT  id, Title, ActualCost
+          SELECT Title, ActualCost,ID 
           FROM Service 
           WHERE ID = (
             SELECT ServiceID 
@@ -413,35 +411,30 @@ export const customerGetAllRequests = async (req, res) => {
         `,
           [request.id]
         );
+        
+        serviceId= detailResult.rows[0].id;
 
-        serviceId = detailResult.rows[0].id;
-
-        feedbackId = (
-          await client.query(
-            `
+        feedbackId=(await client.query(`
           SELECT ID 
           FROM Feedback
           WHERE ServiceID = $1;
-          `,
-            [serviceId]
-          )
-        )?.rows[0]?.id;
+          `,[serviceId]))?.rows[0]?.id;
       }
 
-     // console.log(detailResult);
+     
       const hasData = detailResult && detailResult.rows.length > 0;
-      // Push the title and actual cost to the results array
-
-      results.push({
-        id: request.id,
-        feedbackId: feedbackId,
-        serviceId: serviceId,
-        status: request.status,
-        estimatedTime: request.estimatedtime,
-        requestType: request.requesttype,
-        title: hasData ? detailResult.rows[0].title : null,
-        actualCost: hasData ? detailResult.rows[0].actualcost : null,
-      });
+        // Push the title and actual cost to the results array
+        
+        results.push({
+          id:request.id,
+          feedbackId:feedbackId,
+          serviceId:serviceId,
+          status: request.status,
+          estimatedTime: request.estimatedtime,
+          requestType: request.requesttype,
+          title:  hasData? detailResult.rows[0].title:null,
+          actualCost: hasData?detailResult.rows[0].actualcost:null,
+        });
     }
 
     // Send the final results to the client
@@ -452,14 +445,16 @@ export const customerGetAllRequests = async (req, res) => {
   }
 };
 
+
+
 //=============================/customers/final-approval-support-request========================================
 // /customers/final-approval-support-request
 //Tested
 export const customerSenApprovedSupportRequest = async (req, res) => {
-  console.log(req.body);
+
   const CustomerID = req.userId;
 
-  console.log(CustomerID);
+
   const { Description, DeviceDeliveryMethod, Title, Category } = req.body;
   // TODO: CALL assign function From L
 
@@ -503,11 +498,11 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
     if (req.file !== undefined) {
       // Variable is undefined
       const filename = req.file.filename;
-      console.log(filename);
+   
       imgUrl = `${filename}`;
     }
 
-    console.log(imgUrl);
+
     // TEST =================TODO========================
     await client.query(
       `
@@ -519,7 +514,6 @@ export const customerSenApprovedSupportRequest = async (req, res) => {
 
     io.emit("newRequest", {
       role: "customers",  
-      role: "customer",
       id: uuidv4(),
       message:
         "Your order has been successfully scheduled. Go to the information page to see the status of your order",

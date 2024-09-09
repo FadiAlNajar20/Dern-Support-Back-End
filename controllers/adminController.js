@@ -478,12 +478,12 @@ export const addService = async (req, res) => {
        [customerId]
      );
 
-     if (fetchCustomer.rowCount > 0) {
-       const result = await client.query(sql, values);
-        res.json({ message: "Service added", serviceId: result.rows[0].id });
-      } else {
-        res.json({ message: "Customer not found" });
-      }
+    //  if (fetchCustomer.rowCount > 0) {
+    //    const result = await client.query(sql, values);
+    //     res.json({ message: "Service added", serviceId: result.rows[0].id });
+    //   } else {
+    //     res.json({ message: "Customer not found" });
+    //   }
     console.log('customerId: '+customerId+' /^/^/^/^/^/^/^/^/^/^/^/^/^/^');
     
     //step 1: change RequestType of the request into "ServiceRequest"
