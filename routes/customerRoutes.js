@@ -10,7 +10,7 @@ import {
   customerGetAllRequests,
   customerSenApprovedSupportRequest,
   customerGetFeedback,
-  customerVerifyEmail,
+  // customerVerifyEmail,
 } from "../controllers/customerController.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 import { upload } from "../config/upload.js";
@@ -28,7 +28,7 @@ const router = express.Router();
 router.post("/signup", customerSignup);
 router.post("/login", customerLogin);
 router.post("/logout", verifyToken, customerLogout);
-router.get("/verify-email",  customerVerifyEmail);
+// router.get("/verify-email",  customerVerifyEmail);
 // image
 router.post(
   "/send-support-request",

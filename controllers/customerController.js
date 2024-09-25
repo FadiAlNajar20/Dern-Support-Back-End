@@ -35,61 +35,61 @@ const generateToken = (id) => {
 };
 //Not route
 // Sending email to customer account to verify his email
-const sendEmail = async (Email, token) => {
-  const verificationLink = `http://localhost:${process.env.PORT}/customers/verify-email?token=${token}`;
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  const msg = {
-    to: Email,
-    from: {
-      name: "Dern Support",
-      email: "hasankarraz7@gmail.com",
-    },
-    subject: "Verify your email",
-    html: `
-    <b><p style="font-size: 14px;">Thank you for signing up. Please verify your email by clicking the link below:</p></b>
-<center>
-  <b>
-    <a href="${verificationLink}" style="font-size: 18px; text-decoration: none; display: inline-block; margin: 0 auto;">
-      Verify Email
-    </a>
-  </b>
-</center>
-    `,
-  };
+// const sendEmail = async (Email, token) => {
+//   const verificationLink = `http://localhost:${process.env.PORT}/customers/verify-email?token=${token}`;
+//   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+//   const msg = {
+//     to: Email,
+//     from: {
+//       name: "Dern Support",
+//       email: "hasankarraz7@gmail.com",
+//     },
+//     subject: "Verify your email",
+//     html: `
+//     <b><p style="font-size: 14px;">Thank you for signing up. Please verify your email by clicking the link below:</p></b>
+// <center>
+//   <b>
+//     <a href="${verificationLink}" style="font-size: 18px; text-decoration: none; display: inline-block; margin: 0 auto;">
+//       Verify Email
+//     </a>
+//   </b>
+// </center>
+//     `,
+//   };
 
-  try {
-    await sgMail.send(msg);
-    return { success: true };
-  } catch (error) {
-    console.error("Error sending email", error);
-    return { success: false, error: error.message };
-  }
-};
+//   try {
+//     await sgMail.send(msg);
+//     return { success: true };
+//   } catch (error) {
+//     console.error("Error sending email", error);
+//     return { success: false, error: error.message };
+//   }
+// };
 
 //This routes called automatically when the customer click on the link inside his email
 //=============================/customers//verify-email========================================
 // /customers//verify-email
 // Tested
-export const customerVerifyEmail = async (req, res) => {
-  const { token } = req.query;
+// export const customerVerifyEmail = async (req, res) => {
+//   const { token } = req.query;
 
-  try {
-    const decoded = verifyTokenEmail(token);
-    const userId = decoded.id;
-    await client.query('UPDATE "User" SET isVerified = true WHERE ID = $1', [
-      userId,
-    ]);
+//   try {
+//     const decoded = verifyTokenEmail(token);
+//     const userId = decoded.id;
+//     await client.query('UPDATE "User" SET isVerified = true WHERE ID = $1', [
+//       userId,
+//     ]);
 
-    res.redirect(302, "http://localhost:5173/verify-email");
-    // res.status(200).json({
-    //   success: true,
-    //   message: "Email verified successfully.",
-    // });
-  } catch (error) {
-    console.error("Error verifying email", error.stack);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
+//     res.redirect(302, "http://localhost:5173/verify-email");
+//     // res.status(200).json({
+//     //   success: true,
+//     //   message: "Email verified successfully.",
+//     // });
+//   } catch (error) {
+//     console.error("Error verifying email", error.stack);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// };
 
 //=============================/customers/signup========================================
 // /customers/signup
@@ -130,12 +130,12 @@ export const customerSignup = async (req, res) => {
       [userId, AccountType]
     );
 
-    const emailResult = await sendEmail(Email, token);
-    if (!emailResult.success) {
-      return res
-        .status(500)
-        .json({ error: "Failed to send verification email" });
-    }
+    // const emailResult = await sendEmail(Email, token);
+    // if (!emailResult.success) {
+    //   return res
+    //     .status(500)
+    //     .json({ error: "Failed to send verification email" });
+    // }
 
     return res.status(200).json({
       success: true,
@@ -177,11 +177,11 @@ export const customerLogin = async (req, res) => {
     }
 
     // check if the user is verified or not
-    if (!result.rows[0].isverified) {
-      return res
-        .status(401)
-        .json({ error: "User is not verified. Please verify your email" });
-    }
+    // if (!result.rows[0].isverified) {
+    //   return res
+    //     .status(401)
+    //     .json({ error: "User is not verified. Please verify your email" });
+    // }
 
     // compare the password with the password stored in the database (using bcrypt)
     // bcrypt.compare(plainTextPassword, hashedPassword)

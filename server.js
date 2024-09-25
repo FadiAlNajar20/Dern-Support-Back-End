@@ -1,5 +1,5 @@
 import { Server } from "socket.io";
-import http from "http"; // لإستخدام HTTP Server
+import http from "http";
 import express from "express";
 import cors from "cors";
 import axios from "axios";

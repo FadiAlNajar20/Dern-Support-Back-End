@@ -45,3 +45,16 @@ export const getAllArticles = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch articles" });
   }
 };
+
+// /common/articles/getArticlesById
+export const getArticlesById = async (req, res) => {
+  const {id} = req.params
+  const sql = `SELECT * FROM Article where id=${id};`;
+  try {
+    const result = await client.query(sql);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Get all articles error:", err);
+    res.status(500).json({ error: "Failed to fetch articles" });
+  }
+};
