@@ -385,7 +385,7 @@ export const customerGetAllRequests = async (req, res) => {
         // Fetch Title and ActualCost from NewRequest table
         detailResult = await client.query(
           `
-          SELECT Title, ActualCost 
+          SELECT Title, ActualCost, estimatedcost 
           FROM NewRequest 
           WHERE RequestID = $1;
         `,
